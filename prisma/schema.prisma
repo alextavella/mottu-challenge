@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id           String   @id @default(uuid())
+  name         String
+  document     String   @unique
+  email        String   @unique
+  balance      Decimal  @default(1000) @db.Decimal(15, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  movements Movement[]
+
+  @@map("accounts")
+}
+
+enum MovementType {
+  CREDIT
+  DEBIT
+}
+
+model Movement {
+  id          String       @id @default(uuid())
+  accountId   String
+  amount      Decimal      @db.Decimal(15, 2)
+  type        MovementType
+  description String?
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@map("movements")
+}
+
+model LedgerLog {
+  id         String   @id @default(uuid())
+  movementId String
+  accountId  String
+  amount     Decimal  @db.Decimal(15, 2)
+  type       String
+  data       Json?
+  processedAt DateTime @default(now())
+
+  @@map("ledger_logs")
+}
