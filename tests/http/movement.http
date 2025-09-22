@@ -1,0 +1,17 @@
+@baseUrl = http://localhost:3000
+@accountId = 96b60ee2-3938-447a-9229-bc677ea7f65c
+
+### Create movement [CREDIT]
+# @name createMovement
+POST {{baseUrl}}/v1/movements
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}",
+  "amount": 200,
+  "type": "CREDIT",
+  "description": "Compra no mercado"
+}
+
+### Get account balance
+GET {{baseUrl}}/v1/accounts/{{accountId}}/balance

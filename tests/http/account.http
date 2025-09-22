@@ -1,0 +1,16 @@
+@baseUrl = http://localhost:3000
+@accountId = {{createAccount.response.body.accountId}}
+
+### Create account
+# @name createAccount
+POST {{baseUrl}}/v1/accounts
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "document": "12345678901",
+  "email": "john.doe@example.com"
+}
+
+### Get account balance
+GET {{baseUrl}}/v1/accounts/{{accountId}}/balance
