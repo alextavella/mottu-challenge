@@ -36,3 +36,4 @@ coverage/
 # OS
 .DS*
 ._*
+.vscode/
