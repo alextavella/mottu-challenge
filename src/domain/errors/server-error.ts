@@ -1,15 +1,23 @@
 export class ServerError extends Error {
-  constructor(
-    readonly cause: Error,
-    message: string,
-  ) {
-    super(message, { cause });
-    this.name = this.constructor.name;
+  public readonly originalError?: Error;
+
+  constructor(message: string);
+  constructor(originalError: Error);
+  constructor(message: string, originalError: Error);
+  constructor(messageOrError: string | Error, originalError?: Error) {
+    if (typeof messageOrError === 'string') {
+      super(messageOrError);
+      this.originalError = originalError;
+    } else {
+      super(messageOrError.message);
+      this.originalError = messageOrError;
+    }
+    this.name = 'ServerError';
   }
 }
 
 export function throwServerError(message: string) {
-  return (cause: Error) => {
-    throw new ServerError(cause, message);
+  return (originalError: Error) => {
+    throw new ServerError(message, originalError);
   };
 }

@@ -17,6 +17,11 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx src/database/seed.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:run": "vitest run",
     "commit": "cz",
     "prepare": "husky"
   },
@@ -51,8 +56,11 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@types/amqplib": "^0.10.7",
     "@types/node": "^24.5.2",
+    "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.44.1",
     "@typescript-eslint/parser": "^8.44.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.36.0",
@@ -61,9 +69,11 @@
     "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "prisma": "^6.16.2",
+    "supertest": "^7.1.4",
     "tsup": "^8.5.0",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   },
   "config": {
     "commitizen": {
