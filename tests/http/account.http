@@ -14,3 +14,15 @@ Content-Type: application/json
 
 ### Get account balance
 GET {{baseUrl}}/v1/accounts/{{accountId}}/balance
+
+
+### Create account [invalid request body]
+# @name createAccount
+POST {{baseUrl}}/v1/accounts
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "document": "",
+  "email": "john.doe@example.com"
+}
