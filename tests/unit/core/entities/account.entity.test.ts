@@ -1,5 +1,4 @@
 import { Account, CreateAccountData } from '@/core/entities/account.entity';
-import { describe, expect, it } from 'vitest';
 
 describe('Account Entity', () => {
   describe('CreateAccountData type', () => {

@@ -1,5 +1,4 @@
 import { ServerError, throwServerError } from '@/core/errors/server.error';
-import { describe, expect, it } from 'vitest';
 
 describe('ServerError', () => {
   describe('constructor overloads', () => {

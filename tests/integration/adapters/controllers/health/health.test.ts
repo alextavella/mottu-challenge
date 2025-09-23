@@ -3,7 +3,6 @@ import { getEventManager } from '@/infrastructure/events/event-manager';
 import { createServer } from '@/infrastructure/http/server';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 describe('Health Check Routes', () => {
   let app: FastifyInstance;

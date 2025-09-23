@@ -1,5 +1,4 @@
 import { DomainError } from '@/core/errors/domain.error';
-import { describe, expect, it } from 'vitest';
 
 // Concrete implementation for testing abstract class
 class TestDomainError extends DomainError {

@@ -3,7 +3,6 @@ import {
   BusinessRuleViolationError,
 } from '@/core/errors/account.errors';
 import { DomainError } from '@/core/errors/domain.error';
-import { describe, expect, it } from 'vitest';
 
 describe('Account Errors', () => {
   describe('BusinessRuleViolationError', () => {

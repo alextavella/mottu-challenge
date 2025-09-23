@@ -3,7 +3,6 @@ import { LedgerLogHandler } from '@/core/handlers/ledger-handler';
 import { prisma } from '@/infrastructure/database/client';
 import { MovementType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the database client
 vi.mock('@/infrastructure/database/client', () => ({
