@@ -1,5 +1,4 @@
-import prisma from '@/database/client';
-import { NotFoundError } from '@/http/errors/not-found-error';
+import { GetAccountBalanceUseCase } from '@/domain/usecases/accounts/get-account-balance-usecase';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -14,12 +13,14 @@ const getAccountBalanceResponseSchema = z.object({
   balance: z.number(),
 });
 
+const getAccountBalanceUseCase = new GetAccountBalanceUseCase();
+
 export async function getAccountBalance(fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().route({
     method: 'GET',
     url: '/accounts/:id/balance',
     schema: {
-      description: 'Consulta o saldo atual e limite de crédito disponível',
+      description: 'Consulta o saldo da conta',
       tags: ['accounts'],
       summary: 'Consultar saldo da conta',
       params: getAccountBalanceParamsSchema,
@@ -30,20 +31,14 @@ export async function getAccountBalance(fastify: FastifyInstance) {
     handler: async (request, reply) => {
       const { id: accountId } = request.params;
 
-      const account = await prisma.account.findUnique({
-        where: {
-          id: accountId,
-        },
+      const accountBalance = await getAccountBalanceUseCase.execute({
+        accountId,
       });
 
-      if (!account) {
-        throw new NotFoundError('Account not found');
-      }
-
-      reply.send({
-        accountId,
-        name: account.name,
-        balance: account.balance.toNumber(),
+      reply.status(200).send({
+        accountId: accountBalance.accountId,
+        name: accountBalance.name,
+        balance: accountBalance.balance,
       });
     },
   });

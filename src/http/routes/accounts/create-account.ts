@@ -1,5 +1,4 @@
-import prisma from '@/database/client';
-import { BadRequestError } from '@/http/errors/bad-request-error';
+import { CreateAccountUseCase } from '@/domain/usecases/accounts/create-account-usecase';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -13,6 +12,8 @@ const createAccountBodySchema = z.object({
 const createAccountResponseSchema = z.object({
   accountId: z.uuid(),
 });
+
+const createAccountUseCase = new CreateAccountUseCase();
 
 export async function createAccount(fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().route({
@@ -30,22 +31,14 @@ export async function createAccount(fastify: FastifyInstance) {
     handler: async (request, reply) => {
       const { name, document, email } = request.body;
 
-      const account = await prisma.account
-        .create({
-          data: {
-            name,
-            document,
-            email,
-          },
-        })
-        .catch(() => null);
-
-      if (!account) {
-        throw new BadRequestError('Failed to create account');
-      }
+      const account = await createAccountUseCase.execute({
+        name,
+        document,
+        email,
+      });
 
       reply.status(201).send({
-        accountId: account.id,
+        accountId: account.accountId,
       });
     },
   });

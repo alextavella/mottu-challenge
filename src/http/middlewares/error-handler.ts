@@ -4,6 +4,8 @@ import {
   hasZodFastifySchemaValidationErrors,
   isResponseSerializationError,
 } from 'fastify-type-provider-zod';
+import { BusinessError } from '../../domain/errors/business-error';
+import { ServerError } from '../../domain/errors/server-error';
 import { HttpError } from '../errors/http-error';
 
 export function errorHandler(
@@ -47,6 +49,25 @@ export function errorHandler(
       error: error.name,
       message: error.message,
       statusCode: error.statusCode,
+    });
+  }
+
+  // Business errors
+  if (error instanceof BusinessError) {
+    return reply.status(400).send({
+      error: error.name,
+      message: error.message,
+      statusCode: 400,
+    });
+  }
+
+  // Server errors
+  if (error instanceof ServerError) {
+    return reply.status(500).send({
+      error: error.name,
+      message: error.message,
+      cause: error.cause,
+      statusCode: 500,
     });
   }
 
