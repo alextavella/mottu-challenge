@@ -10,10 +10,11 @@ import { errorHandler } from './middlewares/error-handler';
 import { swaggerPlugin } from './plugins/swagger';
 import { routes } from './routes';
 
-export function createApp() {
+export function createServer() {
   const fastify = Fastify({
     logger: {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
+      enabled: env.NODE_ENV === 'test' ? false : true,
     },
   });
 

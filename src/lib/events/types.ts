@@ -1,7 +1,12 @@
 import { AccountEventType } from '../../message/events/account-event';
 import { MovementEventType } from '../../message/events/movement-event';
 
-export type EventType = AccountEventType | MovementEventType;
+export type EventType = AccountEventType | MovementEventType | TestEventType;
+
+export enum TestEventType {
+  TEST = 'test',
+  TEST_EVENT = 'test.event',
+}
 
 export interface BaseEvent {
   id: string;

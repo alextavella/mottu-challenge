@@ -1,11 +1,11 @@
 import { env } from './config/env';
 import { prisma } from './database/client';
-import { createApp } from './http/server';
+import { createServer } from './http/server';
 import { getEventManager, shutdownEventManager } from './lib/events';
 import { setupEventConsumers } from './message/consumers';
 
 async function start() {
-  const app = createApp();
+  const app = createServer();
 
   try {
     // Test database connection
