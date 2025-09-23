@@ -269,9 +269,9 @@ git commit -m "feat: nova funcionalidade"
 
 ## 📝 TODO
 
-- [ ] Implementar serviços de Account e Movement
-- [ ] Implementar integração com RabbitMQ
-- [ ] Implementar consumer para LedgerLog
+- [x] Implementar serviços de Account e Movement
+- [x] Implementar integração com RabbitMQ
+- [x] Implementar consumer para LedgerLog
 - [ ] Adicionar testes unitários e de integração
 - [ ] Implementar tratamento de erros e retry
 - [ ] Adicionar documentação Swagger
