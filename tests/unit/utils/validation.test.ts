@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 describe('Basic Validation Tests', () => {
   it('should validate string types', () => {
     const testString = 'hello world';

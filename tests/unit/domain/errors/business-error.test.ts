@@ -1,5 +1,4 @@
 import { BusinessError } from '@/domain/errors/business-error';
-import { describe, expect, it } from 'vitest';
 
 describe('BusinessError', () => {
   it('should create a business error with message', () => {

@@ -1,7 +1,7 @@
 import { BusinessError } from '@/domain/errors/business-error';
 import { ServerError } from '@/domain/errors/server-error';
 import type { AccountRepository } from '@/domain/repositories/account-repository';
-import type { MovementRepository } from '@/domain/usecases/interfaces';
+import type { MovementRepository } from '@/domain/repositories/movement-repository';
 import { CreateMovementUseCase } from '@/domain/usecases/movements/create-movement-usecase';
 import { Prisma } from '@prisma/client';
 

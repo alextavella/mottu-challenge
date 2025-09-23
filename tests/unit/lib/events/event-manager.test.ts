@@ -8,7 +8,7 @@ import {
   type EventHandler,
   type EventManagerOptions,
 } from '@/lib/events/types';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Mocked } from 'vitest';
 
 // Mock the dependencies
 vi.mock('@/lib/events/connection');
@@ -21,9 +21,9 @@ const mockHandler: EventHandler<BaseEvent> = {
 
 describe('EventManager', () => {
   let eventManager: EventManager;
-  let mockConnection: vi.Mocked<RabbitMQConnection>;
-  let mockPublisher: vi.Mocked<RabbitMQEventPublisher>;
-  let mockConsumer: vi.Mocked<RabbitMQEventConsumer>;
+  let mockConnection: Mocked<RabbitMQConnection>;
+  let mockPublisher: Mocked<RabbitMQEventPublisher>;
+  let mockConsumer: Mocked<RabbitMQEventConsumer>;
 
   beforeEach(() => {
     vi.clearAllMocks();

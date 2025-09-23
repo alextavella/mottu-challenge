@@ -1,5 +1,4 @@
 import { ServerError } from '@/domain/errors/server-error';
-import { describe, expect, it } from 'vitest';
 
 describe('ServerError', () => {
   it('should create a server error with message', () => {

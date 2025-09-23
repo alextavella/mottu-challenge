@@ -2,7 +2,6 @@ import { EventFactory } from '@/message';
 import { AccountEventType } from '@/message/events/account-event';
 import { MovementEventType } from '@/message/events/movement-event';
 import { Prisma } from '@prisma/client';
-import { describe, expect, it } from 'vitest';
 
 describe('EventFactory', () => {
   describe('createMovementEvent', () => {
@@ -106,9 +105,12 @@ describe('EventFactory', () => {
     it('should create an account event with all required fields', () => {
       const accountData = {
         id: 'acc-123',
+        name: 'John Doe',
+        email: 'john@example.com',
         document: '12345678901',
         balance: new Prisma.Decimal(1500.75),
-        createdAt: new Date('2023-01-01T10:00:00Z'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const event = EventFactory.createAccountEvent(
@@ -127,9 +129,12 @@ describe('EventFactory', () => {
     it('should create an account event without correlation ID', () => {
       const accountData = {
         id: 'acc-123',
+        name: 'John Doe',
+        email: 'john@example.com',
         document: '12345678901',
         balance: new Prisma.Decimal(2000),
-        createdAt: new Date('2023-01-01T10:00:00Z'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const event = EventFactory.createAccountEvent(
@@ -147,9 +152,12 @@ describe('EventFactory', () => {
     it('should generate unique IDs for different account events', () => {
       const accountData = {
         id: 'acc-123',
+        name: 'John Doe',
+        email: 'john@example.com',
         document: '12345678901',
         balance: new Prisma.Decimal(1000),
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const event1 = EventFactory.createAccountEvent(
@@ -167,9 +175,12 @@ describe('EventFactory', () => {
     it('should handle different account event types', () => {
       const accountData = {
         id: 'acc-123',
+        name: 'John Doe',
+        email: 'john@example.com',
         document: '12345678901',
         balance: new Prisma.Decimal(500),
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const createdEvent = EventFactory.createAccountEvent(
@@ -193,9 +204,12 @@ describe('EventFactory', () => {
     it('should handle zero balance', () => {
       const accountData = {
         id: 'acc-123',
+        name: 'John Doe',
+        email: 'john@example.com',
         document: '12345678901',
         balance: new Prisma.Decimal(0),
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const event = EventFactory.createAccountEvent(
@@ -209,9 +223,12 @@ describe('EventFactory', () => {
     it('should handle negative balance', () => {
       const accountData = {
         id: 'acc-123',
+        name: 'John Doe',
+        email: 'john@example.com',
         document: '12345678901',
         balance: new Prisma.Decimal(-100.5),
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const event = EventFactory.createAccountEvent(
