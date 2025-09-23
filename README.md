@@ -46,12 +46,42 @@ pnpm install
 
 ### 2. Configure as variáveis de ambiente
 
-```bash
-# Copie o arquivo de exemplo
-cp env.example .env
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
-# Edite o arquivo .env com suas configurações
+```env
+# Application
+NODE_ENV=development
+PORT=3000
+
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/database_name
+
+# RabbitMQ Connection
+RABBITMQ_URL=amqp://localhost
+RABBITMQ_EXCHANGE=events
+RABBITMQ_RECONNECT_ATTEMPTS=5
+RABBITMQ_RECONNECT_DELAY=5000
+RABBITMQ_HEARTBEAT=60
+
+# Event System
+EVENTS_ENABLE_RETRY=true
+EVENTS_RETRY_ATTEMPTS=3
+EVENTS_RETRY_DELAY=1000
 ```
+
+**Configurações do RabbitMQ:**
+
+- `RABBITMQ_URL`: URL de conexão com RabbitMQ (padrão: amqp://localhost)
+- `RABBITMQ_EXCHANGE`: Nome do exchange para eventos (padrão: events)
+- `RABBITMQ_RECONNECT_ATTEMPTS`: Tentativas de reconexão (padrão: 5)
+- `RABBITMQ_RECONNECT_DELAY`: Delay entre tentativas em ms (padrão: 5000)
+- `RABBITMQ_HEARTBEAT`: Heartbeat da conexão em segundos (padrão: 60)
+
+**Sistema de Eventos:**
+
+- `EVENTS_ENABLE_RETRY`: Habilita retry automático (padrão: true)
+- `EVENTS_RETRY_ATTEMPTS`: Número de tentativas de retry (padrão: 3)
+- `EVENTS_RETRY_DELAY`: Delay entre tentativas em ms (padrão: 1000)
 
 ### 3. Inicie os serviços com Docker
 
@@ -122,7 +152,10 @@ pnpm db:seed            # Executa seeds do banco
 
 ### Health Check
 
-- `GET /health` - Verifica se a API está funcionando
+- `GET /health` - Verifica status da aplicação, banco de dados e RabbitMQ
+  - Retorna 200 se todos os serviços estão saudáveis
+  - Retorna 503 se algum serviço está com problemas
+  - Inclui tempo de resposta de cada serviço
 
 ### Accounts
 

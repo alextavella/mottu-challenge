@@ -1,4 +1,29 @@
 @baseUrl = http://localhost:3000
 
-### Health check
+### Health check completo
+# Verifica status da aplicação, banco de dados e RabbitMQ
+# 
+# Exemplo de resposta (200 OK):
+# {
+#   "status": "healthy",
+#   "timestamp": "2025-09-23T15:30:00.000Z",
+#   "version": "1.0.0",
+#   "services": {
+#     "database": {
+#       "status": "healthy",
+#       "responseTime": 12
+#     },
+#     "rabbitmq": {
+#       "status": "healthy", 
+#       "responseTime": 5
+#     }
+#   }
+# }
+#
+# Status possíveis:
+# - healthy: Todos os serviços funcionando
+# - degraded: Alguns serviços com problema
+# - unhealthy: Serviços críticos indisponíveis
 GET {{baseUrl}}/health
+
+###
