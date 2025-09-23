@@ -1,41 +1,45 @@
-import { AccountEventType } from '../../message/events/account-event';
-import { MovementEventType } from '../../message/events/movement-event';
+export type EventType = string;
 
-export type EventType = AccountEventType | MovementEventType | TestEventType;
-
-export enum TestEventType {
-  TEST = 'test',
-  TEST_EVENT = 'test.event',
-}
-
-export interface BaseEvent {
+export type BaseEvent<T = EventType> = {
   id: string;
-  type: EventType;
+  type: T;
   timestamp: Date;
   version: string;
   correlationId?: string;
+};
+
+export interface IEventManager {
+  publish<T extends BaseEvent>(event: T): Promise<void>;
+  publishBatch<T extends BaseEvent>(events: T[]): Promise<void>;
+  subscribe<T extends BaseEvent>(
+    eventType: EventType,
+    handler: IEventHandler<T>,
+    options?: ConsumerOptions,
+  ): Promise<void>;
+  startConsumer(): Promise<void>;
+  stopConsumer(): Promise<void>;
 }
 
-export interface EventHandler<T extends BaseEvent = BaseEvent> {
+export interface IEventHandler<T extends BaseEvent = BaseEvent> {
   handle(event: T): Promise<void>;
 }
 
-export interface EventPublisher {
+export interface IEventPublisher {
   publish<T extends BaseEvent>(event: T): Promise<void>;
   publishBatch<T extends BaseEvent>(events: T[]): Promise<void>;
 }
 
-export interface EventConsumer {
+export interface IEventConsumer {
   subscribe<T extends BaseEvent>(
     eventType: EventType,
-    handler: EventHandler<T>,
+    handler: IEventHandler<T>,
     options?: ConsumerOptions,
   ): Promise<void>;
   start(): Promise<void>;
   stop(): Promise<void>;
 }
 
-export interface ConsumerOptions {
+export type ConsumerOptions = {
   queue?: string;
   exchange?: string;
   routingKey?: string;
@@ -43,20 +47,21 @@ export interface ConsumerOptions {
   retryAttempts?: number;
   retryDelay?: number;
   deadLetterExchange?: string;
-}
+};
 
-export interface ConnectionOptions {
+export type ConnectionOptions = {
   url: string;
+  exchange?: string;
   reconnectAttempts?: number;
   reconnectDelay?: number;
   heartbeat?: number;
-}
+};
 
-export interface EventManagerOptions {
+export type EventManagerOptions = {
   connection: ConnectionOptions;
   defaultExchange?: string;
   defaultQueue?: string;
   enableRetry?: boolean;
   retryAttempts?: number;
   retryDelay?: number;
-}
+};

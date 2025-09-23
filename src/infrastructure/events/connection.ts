@@ -1,5 +1,5 @@
 import amqp, { Channel, ChannelModel } from 'amqplib';
-import { ConnectionOptions } from './types';
+import { ConnectionOptions as RabbitMQConnectionOptions } from './types';
 
 export class RabbitMQConnection {
   private connection: ChannelModel | null = null;
@@ -7,7 +7,7 @@ export class RabbitMQConnection {
   private isConnecting = false;
   private reconnectTimer: NodeJS.Timeout | null = null;
 
-  constructor(private options: ConnectionOptions) {}
+  constructor(private options: RabbitMQConnectionOptions) {}
 
   async connect(): Promise<ChannelModel> {
     if (this.connection) {

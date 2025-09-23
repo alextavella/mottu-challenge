@@ -1,15 +1,17 @@
+import { env } from '../config/env.config';
 import { RabbitMQConnection } from './connection';
 import { RabbitMQEventConsumer } from './consumer';
 import { RabbitMQEventPublisher } from './publisher';
 import {
   BaseEvent,
   ConsumerOptions,
-  EventHandler,
   EventManagerOptions,
   EventType,
+  IEventHandler,
+  IEventManager,
 } from './types';
 
-export class EventManager {
+export class EventManager implements IEventManager {
   private connection: RabbitMQConnection;
   private publisher: RabbitMQEventPublisher;
   private consumer: RabbitMQEventConsumer;
@@ -17,14 +19,9 @@ export class EventManager {
 
   constructor(private options: EventManagerOptions) {
     this.connection = new RabbitMQConnection(options.connection);
-    this.publisher = new RabbitMQEventPublisher(
-      this.connection,
-      options.defaultExchange,
-    );
-    this.consumer = new RabbitMQEventConsumer(
-      this.connection,
-      options.defaultExchange,
-    );
+    const exchangeName = options.defaultExchange || 'events';
+    this.publisher = new RabbitMQEventPublisher(this.connection, exchangeName);
+    this.consumer = new RabbitMQEventConsumer(this.connection, exchangeName);
   }
 
   async initialize(): Promise<void> {
@@ -58,7 +55,7 @@ export class EventManager {
 
   async subscribe<T extends BaseEvent>(
     eventType: EventType,
-    handler: EventHandler<T>,
+    handler: IEventHandler<T>,
     options?: ConsumerOptions,
   ): Promise<void> {
     if (!this.isInitialized) {
@@ -111,30 +108,28 @@ export class EventManager {
   }
 }
 
+// Configuration helper function
+function createEventManagerOptions(): EventManagerOptions {
+  return {
+    connection: {
+      url: env.RABBITMQ_URL,
+      heartbeat: env.RABBITMQ_HEARTBEAT || 60,
+      reconnectAttempts: env.RABBITMQ_RECONNECT_ATTEMPTS || 5,
+      reconnectDelay: env.RABBITMQ_RECONNECT_DELAY || 5000,
+    },
+    defaultExchange: env.RABBITMQ_EXCHANGE || 'events',
+    enableRetry: env.EVENTS_ENABLE_RETRY,
+    retryAttempts: env.EVENTS_RETRY_ATTEMPTS || 3,
+    retryDelay: env.EVENTS_RETRY_DELAY || 1000,
+  };
+}
+
 // Singleton instance
 let eventManagerInstance: EventManager | null = null;
 
 export function getEventManager(): EventManager {
   if (!eventManagerInstance) {
-    // Use default options or get from environment
-    eventManagerInstance = new EventManager({
-      connection: {
-        url: process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
-        exchange: process.env.RABBITMQ_EXCHANGE || 'events',
-        heartbeat: parseInt(process.env.RABBITMQ_HEARTBEAT || '60'),
-        reconnectAttempts: parseInt(
-          process.env.RABBITMQ_RECONNECT_ATTEMPTS || '5',
-        ),
-        reconnectDelay: parseInt(
-          process.env.RABBITMQ_RECONNECT_DELAY || '5000',
-        ),
-      },
-      events: {
-        enableRetry: process.env.EVENTS_ENABLE_RETRY === 'true',
-        retryAttempts: parseInt(process.env.EVENTS_RETRY_ATTEMPTS || '3'),
-        retryDelay: parseInt(process.env.EVENTS_RETRY_DELAY || '1000'),
-      },
-    });
+    eventManagerInstance = new EventManager(createEventManagerOptions());
   }
   return eventManagerInstance;
 }
