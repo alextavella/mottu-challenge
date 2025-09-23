@@ -4,6 +4,11 @@ import { Prisma } from '@prisma/client';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  ValidationMessages,
+  expectFieldError,
+  expectValidationErrorStructure,
+} from '../../helpers/validation-test-helper';
 
 describe('Movement Routes', () => {
   let app: FastifyInstance;
@@ -107,14 +112,28 @@ describe('Movement Routes', () => {
         .send({})
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expectValidationErrorStructure(response);
+
+      // Check that we have validation errors for all required fields
+      expect(response.body.fields).toHaveProperty('accountId');
+      expect(response.body.fields).toHaveProperty('amount');
+      expect(response.body.fields).toHaveProperty('type');
+
+      // Verify the error messages contain the expected text
+      expect(response.body.fields.accountId).toContain(
+        'AccountId deve ser um UUID válido',
+      ); // undefined treated as invalid UUID
+      expect(response.body.fields.amount).toContain('Valor é obrigatório');
+      expect(response.body.fields.type).toContain(
+        'Tipo de movimento é obrigatório',
+      );
     });
 
     it('should return 400 for missing required fields', async () => {
       const incompleteData = {
         accountId: testAccountId,
         amount: 100,
-        // missing type and description
+        // missing type field
       };
 
       const response = await supertest(app.server)
@@ -122,7 +141,15 @@ describe('Movement Routes', () => {
         .send(incompleteData)
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toMatchObject({
+        error: 'Validation Error',
+        message: 'Os dados enviados são inválidos',
+        errors: expect.any(Array),
+        fields: expect.any(Object),
+      });
+
+      // Should have validation error for missing type field
+      expect(response.body.fields).toHaveProperty('type');
     });
 
     it('should return 400 for non-existent account', async () => {
@@ -172,8 +199,16 @@ describe('Movement Routes', () => {
         .send(movementData)
         .expect(400); // Validation should reject zero amounts
 
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('Validation Error');
+      expect(response.body).toMatchObject({
+        error: 'Validation Error',
+        message: 'Os dados enviados são inválidos',
+        errors: expect.arrayContaining([
+          expect.stringContaining('Valor deve ser positivo'),
+        ]),
+        fields: expect.objectContaining({
+          amount: expect.stringContaining('Valor deve ser positivo'),
+        }),
+      });
     });
 
     it('should handle decimal amounts correctly', async () => {
@@ -214,7 +249,16 @@ describe('Movement Routes', () => {
         .send(movementData)
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toMatchObject({
+        error: 'Validation Error',
+        message: 'Os dados enviados são inválidos',
+        errors: expect.arrayContaining([
+          expect.stringContaining('Valor deve ser positivo'),
+        ]),
+        fields: expect.objectContaining({
+          amount: expect.stringContaining('Valor deve ser positivo'),
+        }),
+      });
     });
 
     it('should validate movement type enum', async () => {
@@ -230,7 +274,14 @@ describe('Movement Routes', () => {
         .send(movementData)
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toMatchObject({
+        error: 'Validation Error',
+        message: 'Os dados enviados são inválidos',
+        errors: expect.any(Array),
+        fields: expect.objectContaining({
+          type: expect.any(String),
+        }),
+      });
     });
   });
 
@@ -282,14 +333,31 @@ describe('Movement Routes', () => {
   });
 
   describe('Movement Routes Error Handling', () => {
-    it('should return proper error format', async () => {
+    it('should return proper error format for validation errors', async () => {
       const response = await supertest(app.server)
         .post('/v1/movements')
-        .send({})
+        .send({ accountId: 'invalid-uuid', amount: -50, type: 'INVALID' })
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
-      expect(typeof response.body.error).toBe('string');
+      expectValidationErrorStructure(response);
+    });
+
+    it('should return specific validation errors for invalid UUID', async () => {
+      const response = await supertest(app.server)
+        .post('/v1/movements')
+        .send({ accountId: 'not-a-uuid', amount: 100, type: 'CREDIT' })
+        .expect(400);
+
+      expectFieldError(response, 'accountId', ValidationMessages.INVALID_UUID);
+    });
+
+    it('should return specific validation errors for invalid amount', async () => {
+      const response = await supertest(app.server)
+        .post('/v1/movements')
+        .send({ accountId: testAccountId, amount: 0, type: 'CREDIT' })
+        .expect(400);
+
+      expectFieldError(response, 'amount', ValidationMessages.POSITIVE_AMOUNT);
     });
   });
 });

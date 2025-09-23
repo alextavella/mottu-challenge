@@ -13,7 +13,7 @@ export class PrismaAccountRepository implements AccountRepository {
         name: data.name,
         document: data.document,
         email: data.email,
-        balance: new Prisma.Decimal(0), // Default balance is 0
+        balance: new Prisma.Decimal(1000), // Default balance is 1000
       },
     });
   }

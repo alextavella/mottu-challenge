@@ -5,8 +5,12 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
 const createAccountBodySchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
-  document: z.string().min(11, 'Documento deve ter pelo menos 11 caracteres'),
+  name: z
+    .string({ message: 'Nome é obrigatório' })
+    .min(1, 'Nome é obrigatório'),
+  document: z
+    .string({ message: 'Documento é obrigatório' })
+    .min(11, 'Documento deve ter pelo menos 11 caracteres'),
   email: z.email('Email deve ser válido'),
 });
 

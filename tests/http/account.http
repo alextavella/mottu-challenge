@@ -22,7 +22,7 @@ POST {{baseUrl}}/v1/accounts
 Content-Type: application/json
 
 {
-  "name": "John Doe",
+  "name": "",
   "document": "",
-  "email": "john.doe@example.com"
+  "email": ""
 }

@@ -8,6 +8,29 @@ import { BusinessError } from '../../domain/errors/business-error';
 import { ServerError } from '../../domain/errors/server-error';
 import { HttpError } from '../errors/http-error';
 
+interface ValidationIssue {
+  instancePath?: string;
+  schemaPath?: string;
+  keyword?: string;
+  params?: unknown;
+  message?: string;
+  data?: unknown;
+}
+
+function formatZodErrors(issue: ValidationIssue): string {
+  return issue.message || 'Erro de validação';
+}
+
+function formatZodFields(
+  acc: Record<string, string>,
+  issue: ValidationIssue,
+): Record<string, string> {
+  const fieldName = issue.instancePath?.replace('/', '') || 'root';
+  const message = issue.message || 'Erro de validação';
+  acc[fieldName] = message;
+  return acc;
+}
+
 export function errorHandler(
   error: FastifyError,
   request: FastifyRequest,
@@ -17,29 +40,27 @@ export function errorHandler(
 
   // Zod validation errors
   if (hasZodFastifySchemaValidationErrors(error)) {
+    const formattedErrors = error.validation.map(formatZodErrors);
+    const fieldErrors = error.validation.reduce(formatZodFields, {});
+
     return reply.status(400).send({
       error: 'Validation Error',
-      message: "Request doesn't match the schema",
-      statusCode: 400,
-      details: {
-        issues: error.validation,
-        method: request.method,
-        url: request.url,
-      },
+      message: 'Os dados enviados são inválidos',
+      errors: formattedErrors,
+      fields: fieldErrors,
     });
   }
 
   // Zod response serialization errors
   if (isResponseSerializationError(error)) {
+    const formattedErrors = error.cause.issues.map(formatZodErrors);
+    const fieldErrors = error.cause.issues.reduce(formatZodFields, {});
+
     return reply.status(500).send({
       error: 'Internal Server Error',
-      message: "Response doesn't match the schema",
-      statusCode: 500,
-      details: {
-        issues: error.cause.issues,
-        method: error.method,
-        url: error.url,
-      },
+      message: 'Erro interno na validação da resposta',
+      errors: formattedErrors,
+      fields: fieldErrors,
     });
   }
 
@@ -48,7 +69,6 @@ export function errorHandler(
     return reply.status(error.statusCode).send({
       error: error.name,
       message: error.message,
-      statusCode: error.statusCode,
     });
   }
 
@@ -57,7 +77,6 @@ export function errorHandler(
     return reply.status(400).send({
       error: error.name,
       message: error.message,
-      statusCode: 400,
     });
   }
 
@@ -67,7 +86,6 @@ export function errorHandler(
       error: error.name,
       message: error.message,
       cause: error.cause,
-      statusCode: 500,
     });
   }
 
@@ -79,6 +97,5 @@ export function errorHandler(
   return reply.status(statusCode).send({
     error: statusCode >= 500 ? 'Internal Server Error' : 'Bad Request',
     message,
-    statusCode,
   });
 }

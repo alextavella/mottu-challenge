@@ -9,8 +9,12 @@ import { z } from 'zod';
 
 const createMovementBodySchema = z.object({
   accountId: z.uuid('AccountId deve ser um UUID válido'),
-  amount: z.number().positive('Valor deve ser positivo'),
-  type: z.enum(['CREDIT', 'DEBIT']),
+  amount: z
+    .number({ message: 'Valor é obrigatório' })
+    .positive('Valor deve ser positivo'),
+  type: z.enum(['CREDIT', 'DEBIT'], {
+    message: 'Tipo de movimento é obrigatório',
+  }),
   description: z.string().optional(),
 });
 

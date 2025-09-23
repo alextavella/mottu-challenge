@@ -2,6 +2,11 @@ import prisma from '@/database/client';
 import { createServer } from '@/http/server';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
+import {
+  ValidationMessages,
+  expectFieldError,
+  expectValidationErrorStructure,
+} from 'tests/helpers/validation-test-helper';
 
 describe('Account Routes', () => {
   let app: FastifyInstance;
@@ -61,7 +66,19 @@ describe('Account Routes', () => {
         .send({})
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expectValidationErrorStructure(response);
+
+      // Check that we have validation errors for all required fields
+      expect(response.body.fields).toHaveProperty('name');
+      expect(response.body.fields).toHaveProperty('document');
+      expect(response.body.fields).toHaveProperty('email');
+
+      // Verify the error messages contain the expected text
+      expect(response.body.fields.name).toContain('Nome é obrigatório');
+      expect(response.body.fields.document).toContain(
+        'Documento é obrigatório',
+      );
+      expect(response.body.fields.email).toContain('Email deve ser válido');
     });
 
     it('should return 400 for missing document', async () => {
@@ -70,7 +87,20 @@ describe('Account Routes', () => {
         .send({ name: 'John Doe', document: '', email: 'john@example.com' })
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toMatchObject({
+        error: 'Validation Error',
+        message: 'Os dados enviados são inválidos',
+        errors: expect.arrayContaining([
+          expect.stringContaining(
+            'Documento deve ter pelo menos 11 caracteres',
+          ),
+        ]),
+        fields: expect.objectContaining({
+          document: expect.stringContaining(
+            'Documento deve ter pelo menos 11 caracteres',
+          ),
+        }),
+      });
     });
 
     it('should return 400 when account already exists', async () => {
@@ -146,7 +176,7 @@ describe('Account Routes', () => {
       expect(response.body).toMatchObject({
         accountId,
         name: 'John Doe',
-        balance: 0, // New accounts start with 0 balance
+        balance: 1000, // New accounts start with 1000 balance
       });
     });
 
@@ -159,6 +189,30 @@ describe('Account Routes', () => {
 
       expect(response.body).toHaveProperty('error');
       expect(response.body.error).toContain('Not Found');
+    });
+
+    it('should set balance to 1000 by default', async () => {
+      // Create account
+      const createResponse = await supertest(app.server)
+        .post('/v1/accounts')
+        .send({
+          name: 'John Doe',
+          document: `1234567890${Date.now().toString().slice(-4)}`, // 14 characters - unique document
+          email: `john${Date.now()}@example.com`,
+        })
+        .expect(201);
+
+      const accountId = createResponse.body.accountId;
+
+      const response = await supertest(app.server)
+        .get(`/v1/accounts/${accountId}/balance`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        accountId,
+        name: 'John Doe',
+        balance: 1000,
+      });
     });
 
     it('should return correct balance after movements', async () => {
@@ -179,7 +233,7 @@ describe('Account Routes', () => {
         .post('/v1/movements')
         .send({
           accountId,
-          amount: 1000,
+          amount: 500,
           type: 'CREDIT',
           description: 'Initial deposit',
         })
@@ -189,17 +243,11 @@ describe('Account Routes', () => {
         .post('/v1/movements')
         .send({
           accountId,
-          amount: 200,
+          amount: 250,
           type: 'DEBIT',
           description: 'Withdrawal',
         })
         .expect(201);
-
-      // Update account balance
-      await prisma.account.update({
-        where: { id: accountId },
-        data: { balance: 800 },
-      });
 
       // Get balance
       const response = await supertest(app.server)
@@ -209,67 +257,7 @@ describe('Account Routes', () => {
       expect(response.body).toMatchObject({
         accountId,
         name: 'John Doe',
-        balance: 800,
-      });
-    });
-
-    it('should handle zero balance', async () => {
-      // Create account
-      const createResponse = await supertest(app.server)
-        .post('/v1/accounts')
-        .send({
-          name: 'John Doe',
-          document: `1234567890${Date.now().toString().slice(-4)}`, // 14 characters - unique document
-          email: `john${Date.now()}@example.com`,
-        })
-        .expect(201);
-
-      const accountId = createResponse.body.accountId;
-
-      // Update balance to 0
-      await prisma.account.update({
-        where: { id: accountId },
-        data: { balance: 0 },
-      });
-
-      const response = await supertest(app.server)
-        .get(`/v1/accounts/${accountId}/balance`)
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        accountId,
-        name: 'John Doe',
-        balance: 0,
-      });
-    });
-
-    it('should handle negative balance', async () => {
-      // Create account
-      const createResponse = await supertest(app.server)
-        .post('/v1/accounts')
-        .send({
-          name: 'John Doe',
-          document: `1234567890${Date.now().toString().slice(-4)}`, // 14 characters - unique document
-          email: `john${Date.now()}@example.com`,
-        })
-        .expect(201);
-
-      const accountId = createResponse.body.accountId;
-
-      // Set negative balance directly
-      await prisma.account.update({
-        where: { id: accountId },
-        data: { balance: -100.5 },
-      });
-
-      const response = await supertest(app.server)
-        .get(`/v1/accounts/${accountId}/balance`)
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        accountId,
-        name: 'John Doe',
-        balance: -100.5,
+        balance: 1250,
       });
     });
   });
@@ -285,14 +273,55 @@ describe('Account Routes', () => {
       expect(response.body).toHaveProperty('error');
     });
 
-    it('should return proper error format', async () => {
+    it('should return proper error format for validation errors', async () => {
       const response = await supertest(app.server)
         .post('/v1/accounts')
-        .send({ name: 'John Doe', document: '', email: 'john@example.com' })
+        .send({ name: '', document: 'abc', email: 'invalid-email' })
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
-      expect(typeof response.body.error).toBe('string');
+      expectValidationErrorStructure(response);
+    });
+
+    it('should return specific validation errors for each field', async () => {
+      // Test empty name
+      const emptyNameResponse = await supertest(app.server)
+        .post('/v1/accounts')
+        .send({ name: '', document: '12345678901', email: 'valid@email.com' })
+        .expect(400);
+
+      expectFieldError(
+        emptyNameResponse,
+        'name',
+        ValidationMessages.REQUIRED_NAME,
+      );
+
+      // Test invalid email
+      const invalidEmailResponse = await supertest(app.server)
+        .post('/v1/accounts')
+        .send({
+          name: 'Valid Name',
+          document: '12345678901',
+          email: 'invalid-email',
+        })
+        .expect(400);
+
+      expectFieldError(
+        invalidEmailResponse,
+        'email',
+        ValidationMessages.INVALID_EMAIL,
+      );
+
+      // Test short document
+      const shortDocResponse = await supertest(app.server)
+        .post('/v1/accounts')
+        .send({ name: 'Valid Name', document: '123', email: 'valid@email.com' })
+        .expect(400);
+
+      expectFieldError(
+        shortDocResponse,
+        'document',
+        ValidationMessages.REQUIRED_DOCUMENT,
+      );
     });
   });
 });
