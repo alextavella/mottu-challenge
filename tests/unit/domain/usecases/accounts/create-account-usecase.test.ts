@@ -1,43 +1,28 @@
 import { BusinessError } from '@/domain/errors/business-error';
 import { ServerError } from '@/domain/errors/server-error';
-import type { AccountRepository } from '@/domain/repositories/account-repository';
+import { AccountRepository } from '@/domain/repositories/account-repository';
 import { CreateAccountUseCase } from '@/domain/usecases/accounts/create-account-usecase';
 import { Prisma } from '@prisma/client';
-
-// Mock do repositório
-const mockAccountRepository: AccountRepository = {
-  create: vi.fn(),
-  findById: vi.fn(),
-  findByDocumentOrEmail: vi.fn(),
-  updateBalance: vi.fn(),
-  getBalance: vi.fn(),
-};
+import { createAccountRepositoryMock } from 'tests/mocks/repositories/account-repository.mock';
+import {
+  createMockAccountData,
+  createMockAccountInput,
+} from 'tests/mocks/utils/test-data.mock';
 
 describe('CreateAccountUseCase', () => {
   let createAccountUseCase: CreateAccountUseCase;
+  let mockAccountRepository: AccountRepository;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAccountRepository = createAccountRepositoryMock();
     createAccountUseCase = new CreateAccountUseCase(mockAccountRepository);
   });
 
   describe('execute', () => {
     it('should create an account successfully', async () => {
-      const accountData = {
-        name: 'John Doe',
-        document: '12345678901',
-        email: 'john@example.com',
-      };
-
-      const expectedAccount = {
-        id: 'account-id-123',
-        name: 'John Doe',
-        document: '12345678901',
-        email: 'john@example.com',
-        balance: new Prisma.Decimal(1000),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const accountData = createMockAccountInput();
+      const expectedAccount = createMockAccountData();
 
       vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
         null,

@@ -1,30 +1,21 @@
 import { BusinessError } from '@/domain/errors/business-error';
 import { ServerError } from '@/domain/errors/server-error';
-import type { AccountRepository } from '@/domain/repositories/account-repository';
-import type { MovementRepository } from '@/domain/repositories/movement-repository';
+import { AccountRepository } from '@/domain/repositories/account-repository';
+import { MovementRepository } from '@/domain/repositories/movement-repository';
 import { CreateMovementUseCase } from '@/domain/usecases/movements/create-movement-usecase';
 import { Prisma } from '@prisma/client';
-
-// Mock dos repositórios
-const mockAccountRepository: AccountRepository = {
-  create: vi.fn(),
-  findById: vi.fn(),
-  findByDocumentOrEmail: vi.fn(),
-  updateBalance: vi.fn(),
-  getBalance: vi.fn(),
-};
-
-const mockMovementRepository: MovementRepository = {
-  create: vi.fn(),
-  findById: vi.fn(),
-  findByAccountId: vi.fn(),
-};
+import { createAccountRepositoryMock } from 'tests/mocks/repositories/account-repository.mock';
+import { createMovementRepositoryMock } from 'tests/mocks/repositories/movement-repository.mock';
 
 describe('CreateMovementUseCase', () => {
   let createMovementUseCase: CreateMovementUseCase;
+  let mockMovementRepository: MovementRepository;
+  let mockAccountRepository: AccountRepository;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMovementRepository = createMovementRepositoryMock();
+    mockAccountRepository = createAccountRepositoryMock();
     createMovementUseCase = new CreateMovementUseCase(
       mockMovementRepository,
       mockAccountRepository,

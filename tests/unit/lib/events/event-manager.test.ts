@@ -5,48 +5,32 @@ import { RabbitMQEventPublisher } from '@/lib/events/publisher';
 import {
   TestEventType,
   type BaseEvent,
-  type EventHandler,
   type EventManagerOptions,
 } from '@/lib/events/types';
-import { Mocked } from 'vitest';
+import { createEventSystemMocks } from 'tests/mocks/events/event-system.mock';
+import type { Mocked } from 'vitest';
 
 // Mock the dependencies
 vi.mock('@/lib/events/connection');
 vi.mock('@/lib/events/publisher');
 vi.mock('@/lib/events/consumer');
 
-const mockHandler: EventHandler<BaseEvent> = {
-  handle: vi.fn(),
-};
-
 describe('EventManager', () => {
   let eventManager: EventManager;
   let mockConnection: Mocked<RabbitMQConnection>;
   let mockPublisher: Mocked<RabbitMQEventPublisher>;
   let mockConsumer: Mocked<RabbitMQEventConsumer>;
+  let mockHandler: ReturnType<typeof createEventSystemMocks>['mockHandler'];
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Create mocked instances
-    mockConnection = {
-      connect: vi.fn().mockResolvedValue(undefined),
-      close: vi.fn().mockResolvedValue(undefined),
-      createChannel: vi.fn(),
-      isConnected: vi.fn().mockReturnValue(true),
-    } as any;
-
-    mockPublisher = {
-      publish: vi.fn().mockResolvedValue(undefined),
-      publishBatch: vi.fn().mockResolvedValue(undefined),
-      close: vi.fn().mockResolvedValue(undefined),
-    } as any;
-
-    mockConsumer = {
-      subscribe: vi.fn().mockResolvedValue(undefined),
-      start: vi.fn().mockResolvedValue(undefined),
-      stop: vi.fn().mockResolvedValue(undefined),
-    } as any;
+    // Create mocked instances using centralized mocks
+    const mocks = createEventSystemMocks();
+    mockConnection = mocks.mockConnection;
+    mockPublisher = mocks.mockPublisher;
+    mockConsumer = mocks.mockConsumer;
+    mockHandler = mocks.mockHandler;
 
     // Mock the constructors
     vi.mocked(RabbitMQConnection).mockImplementation(() => mockConnection);

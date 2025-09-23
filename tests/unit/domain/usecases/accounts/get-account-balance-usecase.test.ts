@@ -1,23 +1,17 @@
 import { BusinessError } from '@/domain/errors/business-error';
 import { ServerError } from '@/domain/errors/server-error';
-import type { AccountRepository } from '@/domain/repositories/account-repository';
+import { AccountRepository } from '@/domain/repositories/account-repository';
 import { GetAccountBalanceUseCase } from '@/domain/usecases/accounts/get-account-balance-usecase';
 import { Prisma } from '@prisma/client';
-
-// Mock do repositório
-const mockAccountRepository: AccountRepository = {
-  create: vi.fn(),
-  findById: vi.fn(),
-  findByDocumentOrEmail: vi.fn(),
-  updateBalance: vi.fn(),
-  getBalance: vi.fn(),
-};
+import { createAccountRepositoryMock } from 'tests/mocks/repositories/account-repository.mock';
 
 describe('GetAccountBalanceUseCase', () => {
   let getAccountBalanceUseCase: GetAccountBalanceUseCase;
+  let mockAccountRepository: AccountRepository;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAccountRepository = createAccountRepositoryMock();
     getAccountBalanceUseCase = new GetAccountBalanceUseCase(
       mockAccountRepository,
     );
