@@ -2,12 +2,12 @@
  * Helper functions for testing validation error responses
  */
 
-export interface ValidationErrorResponse {
+export type ValidationErrorResponse = {
   error: string;
   message: string;
   errors: string[];
   fields: Record<string, string>;
-}
+};
 
 /**
  * Validates the structure of a validation error response

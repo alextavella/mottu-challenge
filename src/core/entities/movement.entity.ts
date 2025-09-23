@@ -1,17 +1,19 @@
-export type MovementType = 'credit' | 'debit';
+import { MovementType } from '@prisma/client';
 
-export interface Movement {
+export type Movement = {
   readonly id: string;
   readonly accountId: string;
   readonly type: MovementType;
   readonly amount: number;
   readonly description?: string;
   readonly createdAt: Date;
-}
+};
 
-export interface CreateMovementData {
+export type CreateMovementData = {
   readonly accountId: string;
   readonly type: MovementType;
   readonly amount: number;
   readonly description?: string;
-}
+};
+
+export { MovementType };

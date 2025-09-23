@@ -1,4 +1,5 @@
-import { Movement, MovementType, Prisma } from '@prisma/client';
+import { CreateMovementData } from '@/core/entities/movement.entity';
+import { Movement, MovementType } from '@prisma/client';
 
 export interface IMovementRepository {
   create(data: CreateMovementData): Promise<Movement>;
@@ -8,13 +9,6 @@ export interface IMovementRepository {
     options?: FindMovementOptions,
   ): Promise<Movement[]>;
 }
-
-export type CreateMovementData = {
-  accountId: string;
-  amount: Prisma.Decimal | number;
-  type: MovementType;
-  description?: string | null;
-};
 
 export type FindMovementOptions = {
   limit?: number;
