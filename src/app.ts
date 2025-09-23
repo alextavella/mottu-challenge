@@ -1,8 +1,11 @@
-import { env } from './config/env';
-import { prisma } from './database/client';
-import { createServer } from './http/server';
-import { getEventManager, shutdownEventManager } from './lib/events';
-import { setupEventConsumers } from './message/consumers';
+import { env } from './infrastructure/config/env.config';
+import { prisma } from './infrastructure/database/client';
+import { setupEventConsumers } from './infrastructure/events/consumers';
+import {
+  getEventManager,
+  shutdownEventManager,
+} from './infrastructure/events/event-manager';
+import { createServer } from './infrastructure/http/server';
 
 async function start() {
   const app = createServer();
