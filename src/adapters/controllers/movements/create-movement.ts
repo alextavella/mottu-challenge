@@ -3,6 +3,7 @@ import {
   getAccountRepository,
   getMovementRepository,
 } from '@/infrastructure/container/dependency-injection.container';
+import { getEventManager } from '@/infrastructure/events/event-manager';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -40,9 +41,11 @@ export async function createMovement(fastify: FastifyInstance) {
 
       const movementRepository = getMovementRepository();
       const accountRepository = getAccountRepository();
+      const eventManager = getEventManager();
       const createMovementUseCase = new CreateMovementUseCase(
         movementRepository,
         accountRepository,
+        eventManager,
       );
 
       const movement = await createMovementUseCase.execute({

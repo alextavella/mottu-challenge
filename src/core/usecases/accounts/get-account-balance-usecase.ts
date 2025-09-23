@@ -1,12 +1,11 @@
 import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
 import { AccountNotFoundError } from '@/core/errors/account.errors';
 import { ServerError } from '@/core/errors/server.error';
-import { IUseCase } from '../interfaces';
+import { IUseCase } from '../../contracts/usecases/interfaces';
 
 type Input = {
   accountId: string;
 };
-
 type Output = {
   accountId: string;
   name: string;

@@ -1,20 +1,18 @@
 import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
 import { IMovementRepository } from '@/core/contracts/repositories/movement-repository';
+import {
+  CreateMovementData,
+  MovementType,
+} from '@/core/entities/movement.entity';
 import { AccountNotFoundError } from '@/core/errors/account.errors';
 import { InsufficientFundsError } from '@/core/errors/movement.errors';
 import { ServerError } from '@/core/errors/server.error';
-import { getEventManager } from '@/infrastructure/events/event-manager';
-import { MovementEventType } from '@/infrastructure/events/events/movement-event';
+import { MovementEventType } from '@/core/events/movement-event';
 import { EventFactory } from '@/infrastructure/events/index';
-import { IUseCase } from '../interfaces';
+import { IEventManager } from '@/infrastructure/events/types';
+import { IUseCase } from '../../contracts/usecases/interfaces';
 
-type Input = {
-  accountId: string;
-  amount: number;
-  type: 'CREDIT' | 'DEBIT';
-  description?: string;
-};
-
+type Input = CreateMovementData;
 type Output = {
   movementId: string;
 };
@@ -23,6 +21,7 @@ export class CreateMovementUseCase implements IUseCase<Input, Output> {
   constructor(
     private readonly movementRepository: IMovementRepository,
     private readonly accountRepository: IAccountRepository,
+    private readonly eventManager: IEventManager,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -37,7 +36,7 @@ export class CreateMovementUseCase implements IUseCase<Input, Output> {
       }
 
       // Check if there's sufficient balance for debit operations
-      if (type === 'DEBIT' && account.balance.toNumber() < amount) {
+      if (type === MovementType.DEBIT && account.balance.toNumber() < amount) {
         throw new InsufficientFundsError(
           accountId,
           amount,
@@ -55,7 +54,7 @@ export class CreateMovementUseCase implements IUseCase<Input, Output> {
 
       // Update account balance
       const newBalance =
-        type === 'CREDIT'
+        type === MovementType.CREDIT
           ? account.balance.add(amount)
           : account.balance.sub(amount);
 
@@ -67,8 +66,7 @@ export class CreateMovementUseCase implements IUseCase<Input, Output> {
         movement,
       );
 
-      const eventManager = getEventManager();
-      await eventManager.publish(event).catch((error) => {
+      await this.eventManager.publish(event).catch((error) => {
         console.error('Failed to publish movement event:', error);
         // Don't fail the operation if event publishing fails
       });

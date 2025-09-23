@@ -1,8 +1,8 @@
 import {
-  CreateMovementData,
   FindMovementOptions,
   IMovementRepository,
 } from '@/core/contracts/repositories/movement-repository';
+import { CreateMovementData } from '@/core/entities/movement.entity';
 import { Movement, Prisma, PrismaClient } from '@prisma/client';
 
 export class MovementRepository implements IMovementRepository {

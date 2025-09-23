@@ -1,23 +1,22 @@
 import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
+import { CreateAccountData } from '@/core/entities/account.entity';
 import { BusinessRuleViolationError } from '@/core/errors/account.errors';
 import { ServerError } from '@/core/errors/server.error';
-import { getEventManager } from '@/infrastructure/events/event-manager';
-import { AccountEventType } from '@/infrastructure/events/events/account-event';
+import { AccountEventType } from '@/core/events/account-event';
 import { EventFactory } from '@/infrastructure/events/index';
-import { IUseCase } from '../interfaces';
+import { IEventManager } from '@/infrastructure/events/types';
+import { IUseCase } from '../../contracts/usecases/interfaces';
 
-type Input = {
-  name: string;
-  document: string;
-  email: string;
-};
-
+type Input = CreateAccountData;
 type Output = {
   accountId: string;
 };
 
 export class CreateAccountUseCase implements IUseCase<Input, Output> {
-  constructor(private readonly accountRepository: IAccountRepository) {}
+  constructor(
+    private readonly accountRepository: IAccountRepository,
+    private readonly eventManager: IEventManager,
+  ) {}
 
   async execute(input: Input): Promise<Output> {
     const { name, document, email } = input;
@@ -48,8 +47,7 @@ export class CreateAccountUseCase implements IUseCase<Input, Output> {
         account,
       );
 
-      const eventManager = getEventManager();
-      await eventManager.publish(event).catch((error) => {
+      await this.eventManager.publish(event).catch((error) => {
         console.error('Failed to publish account event:', error);
         // Don't fail the operation if event publishing fails
       });
