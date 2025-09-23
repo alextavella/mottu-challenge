@@ -2,6 +2,7 @@
   "name": "mini-ledger",
   "version": "1.0.0",
   "description": "Mini Ledger - Sistema de registro de movimentações financeiras",
+  "type": "module",
   "main": "dist/app.js",
   "scripts": {
     "dev": "tsx watch src/app.ts",
@@ -67,6 +68,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "husky": "^9.1.7",
+    "lint-staged": "^16.2.0",
     "prettier": "^3.6.2",
     "prisma": "^6.16.2",
     "supertest": "^7.1.4",

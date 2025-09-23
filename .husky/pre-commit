@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm type-check
-pnpm lint:check
-pnpm format:check
+echo "🚀 Running lint-staged..."
+pnpm lint-staged
