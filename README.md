@@ -166,6 +166,48 @@ pnpm db:seed            # Executa seeds do banco
 
 - `POST /movements` - Cria um movimento (crédito/débito)
 
+## 🧪 Testes
+
+O projeto utiliza **Vitest** como framework de testes, proporcionando execução rápida e funcionalidades modernas.
+
+### Comandos de Teste
+
+```bash
+# Executar todos os testes
+pnpm test:run
+
+# Executar testes em modo watch
+pnpm test:watch
+
+# Executar com interface visual
+pnpm test:ui
+
+# Executar com relatório de cobertura
+pnpm test:coverage
+```
+
+### Estrutura de Testes
+
+```
+tests/
+├── setup.ts                 # Configuração global
+├── unit/                    # Testes unitários
+│   ├── domain/             # Camada de domínio
+│   ├── lib/                # Bibliotecas
+│   └── utils/              # Utilitários
+└── README.md               # Guia completo de testes
+```
+
+### Status Atual
+
+- ✅ **15 testes** passando
+- ✅ **Cobertura configurada** (HTML + JSON + Text)
+- ✅ **Testes de erros de domínio**
+- ✅ **Testes de tipos de eventos**
+- 🔄 **Testes de casos de uso** (em desenvolvimento)
+
+Para mais detalhes, consulte [tests/README.md](./tests/README.md).
+
 ## 🐳 Serviços Docker
 
 O projeto inclui os seguintes serviços:
@@ -272,6 +314,7 @@ git commit -m "feat: nova funcionalidade"
 - [x] Implementar serviços de Account e Movement
 - [x] Implementar integração com RabbitMQ
 - [x] Implementar consumer para LedgerLog
-- [ ] Adicionar testes unitários e de integração
+- [x] Configurar Vitest e testes básicos
+- [ ] Expandir cobertura de testes unitários e de integração
 - [ ] Implementar tratamento de erros e retry
 - [ ] Adicionar documentação Swagger
