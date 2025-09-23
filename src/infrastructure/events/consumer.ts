@@ -2,11 +2,11 @@
 
 import { Channel, ConsumeMessage } from 'amqplib';
 import { RabbitMQConnection } from './connection';
-import { BaseEvent, ConsumerOptions, EventHandler } from './types';
+import { BaseEvent, ConsumerOptions, IEventHandler } from './types';
 
 interface ConsumerRegistration {
   eventType: string;
-  handler: EventHandler<any>;
+  handler: IEventHandler<any>;
   options: Required<ConsumerOptions>;
   consumerTag?: string;
 }
@@ -15,18 +15,15 @@ export class RabbitMQEventConsumer {
   private channel: Channel | null = null;
   private consumers: Map<string, ConsumerRegistration> = new Map();
   private isStarted = false;
-  private readonly exchangeName: string;
 
   constructor(
     private connection: RabbitMQConnection,
-    exchangeName = 'events',
-  ) {
-    this.exchangeName = exchangeName;
-  }
+    private readonly exchangeName: string,
+  ) {}
 
   async subscribe<T extends BaseEvent>(
     eventType: string,
-    handler: EventHandler<T>,
+    handler: IEventHandler<T>,
     options: ConsumerOptions = {},
   ): Promise<void> {
     const consumerOptions: Required<ConsumerOptions> = {
@@ -141,7 +138,7 @@ export class RabbitMQEventConsumer {
 
   private async handleMessage<T extends BaseEvent>(
     msg: ConsumeMessage,
-    handler: EventHandler<T>,
+    handler: IEventHandler<T>,
     options: Required<ConsumerOptions>,
   ): Promise<void> {
     if (!this.channel) return;

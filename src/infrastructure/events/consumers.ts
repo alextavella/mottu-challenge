@@ -1,5 +1,5 @@
+import { MovementEventType } from '@/core/events/movement-event';
 import { getEventManager } from '@/infrastructure/events/event-manager';
-import { MovementEventType } from '@/infrastructure/events/events/movement-event';
 import { EventHandlers } from '.';
 
 export async function setupEventConsumers() {

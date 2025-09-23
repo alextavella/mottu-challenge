@@ -1,6 +1,6 @@
-import { createAccountEvent } from './events/account-event';
-import { createMovementEvent } from './events/movement-event';
-import { LedgerLogHandler } from './handlers/ledger-handler';
+import { createAccountEvent } from '../../core/events/account-event';
+import { createMovementEvent } from '../../core/events/movement-event';
+import { LedgerLogHandler } from '../../core/handlers/ledger-handler';
 
 // Export handlers
 export const EventHandlers = {
