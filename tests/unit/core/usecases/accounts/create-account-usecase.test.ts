@@ -2,21 +2,28 @@ import { IAccountRepository } from '@/core/contracts/repositories/account-reposi
 import { BusinessRuleViolationError } from '@/core/errors/account.errors';
 import { ServerError } from '@/core/errors/server.error';
 import { CreateAccountUseCase } from '@/core/usecases/accounts/create-account-usecase';
+import { IEventManager } from '@/infrastructure/events/types';
 import { Prisma } from '@prisma/client';
-import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
 import {
   createMockAccountData,
   createMockAccountInput,
-} from 'tests/mocks/core/test-data.mock';
+} from 'tests/mocks/core/entities/test-data.mock';
+import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
+import { createEventManagerMock } from 'tests/mocks/infrastructure/events/event-system.mock';
 
 describe('CreateAccountUseCase', () => {
   let createAccountUseCase: CreateAccountUseCase;
   let mockAccountRepository: IAccountRepository;
+  let mockEventManager: IEventManager;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockAccountRepository = createAccountRepositoryMock();
-    createAccountUseCase = new CreateAccountUseCase(mockAccountRepository);
+    mockEventManager = createEventManagerMock();
+    createAccountUseCase = new CreateAccountUseCase(
+      mockAccountRepository,
+      mockEventManager,
+    );
   });
 
   describe('execute', () => {
@@ -43,6 +50,13 @@ describe('CreateAccountUseCase', () => {
         document: '12345678901',
         email: 'john@example.com',
       });
+      expect(mockEventManager.publish).toHaveBeenCalledTimes(1);
+      expect(mockEventManager.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'account.created',
+          data: expectedAccount,
+        }),
+      );
     });
 
     it('should throw BusinessRuleViolationError if account already exists', async () => {
@@ -158,6 +172,39 @@ describe('CreateAccountUseCase', () => {
         '',
         'john@example.com',
       );
+    });
+
+    it('should handle event publishing failure gracefully', async () => {
+      const accountData = createMockAccountInput();
+      const expectedAccount = createMockAccountData();
+
+      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
+        null,
+      );
+      vi.mocked(mockAccountRepository.create).mockResolvedValue(
+        expectedAccount,
+      );
+
+      // Mock event manager to fail
+      vi.mocked(mockEventManager.publish).mockRejectedValue(
+        new Error('Event publishing failed'),
+      );
+
+      // Spy on console.error to verify error logging
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      const result = await createAccountUseCase.execute(accountData);
+
+      expect(result).toEqual({ accountId: 'account-id-123' });
+      expect(mockEventManager.publish).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to publish account event:',
+        expect.any(Error),
+      );
+
+      consoleErrorSpy.mockRestore();
     });
   });
 });

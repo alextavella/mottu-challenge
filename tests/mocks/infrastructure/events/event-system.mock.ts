@@ -1,8 +1,23 @@
-import type { RabbitMQConnection } from '@/lib/events/connection';
-import type { RabbitMQEventConsumer } from '@/lib/events/consumer';
-import type { RabbitMQEventPublisher } from '@/lib/events/publisher';
-import type { BaseEvent, EventHandler } from '@/lib/events/types';
+import { RabbitMQConnection } from '@/infrastructure/events/connection';
+import { RabbitMQEventConsumer } from '@/infrastructure/events/consumer';
+import { RabbitMQEventPublisher } from '@/infrastructure/events/publisher';
+import {
+  BaseEvent,
+  IEventHandler,
+  IEventManager,
+} from '@/infrastructure/events/types';
 import type { Mocked } from 'vitest';
+
+/**
+ * Mock do IEventManager para uso em testes unitários
+ */
+export const createEventManagerMock = (): IEventManager =>
+  ({
+    publish: vi.fn().mockResolvedValue(undefined),
+    publishBatch: vi.fn().mockResolvedValue(undefined),
+    subscribe: vi.fn().mockResolvedValue(undefined),
+    startConsumer: vi.fn().mockResolvedValue(undefined),
+  }) as any;
 
 /**
  * Mock do RabbitMQConnection
@@ -42,7 +57,7 @@ export const createRabbitMQEventConsumerMock =
  */
 export const createEventHandlerMock = <
   T extends BaseEvent,
->(): EventHandler<T> => ({
+>(): IEventHandler<T> => ({
   handle: vi.fn(),
 });
 

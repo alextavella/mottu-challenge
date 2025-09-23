@@ -3,8 +3,8 @@ import { AccountNotFoundError } from '@/core/errors/account.errors';
 import { ServerError } from '@/core/errors/server.error';
 import { GetAccountBalanceUseCase } from '@/core/usecases/accounts/get-account-balance-usecase';
 import { Prisma } from '@prisma/client';
+import { createMockAccountData } from 'tests/mocks/core/entities/test-data.mock';
 import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
-import { createMockAccountData } from 'tests/mocks/core/test-data.mock';
 
 describe('GetAccountBalanceUseCase', () => {
   let getAccountBalanceUseCase: GetAccountBalanceUseCase;
