@@ -13,6 +13,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: [
+        'src/adapters/**/*.ts',
+        'src/core/**/*.ts',
+        '!src/core/contracts/**/*.ts',
+      ],
       exclude: [
         'node_modules/',
         'tests/',

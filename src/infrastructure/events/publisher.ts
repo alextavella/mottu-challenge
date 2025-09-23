@@ -1,8 +1,8 @@
 import { Channel } from 'amqplib';
 import { RabbitMQConnection } from './connection';
-import { BaseEvent, EventPublisher } from './types';
+import { BaseEvent, IEventPublisher } from './types';
 
-export class RabbitMQEventPublisher implements EventPublisher {
+export class RabbitMQEventPublisher implements IEventPublisher {
   private channel: Channel | null = null;
   private readonly exchangeName: string;
 

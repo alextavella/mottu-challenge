@@ -7,20 +7,17 @@ import { afterAll, beforeAll, beforeEach } from 'vitest';
 
 // Setup test database
 beforeAll(async () => {
-  // // Ensure test environment is set
-  // process.env.NODE_ENV = 'test';
+  // Ensure test environment is set
+  process.env.NODE_ENV = 'test';
 
-  // // Set test database URL if not already set
-  // if (!process.env.DATABASE_URL) {
-  //   process.env.DATABASE_URL =
-  //     'postgresql://postgres:postgres@localhost:5432/mini_ledger_test?schema=public';
-  // }
+  console.log('Setting up test database:', process.env.DATABASE_URL);
 
   try {
     execSync('npx prisma db push --accept-data-loss', {
       stdio: 'inherit',
-      env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
+      env: { ...process.env },
     });
+    console.log('Test database setup completed');
   } catch (error) {
     console.warn(
       'Failed to setup test database (this is ok if DB is not running):',

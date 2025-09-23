@@ -2,11 +2,12 @@ import { prisma } from '@/infrastructure/database/client';
 import { createServer } from '@/infrastructure/http/server';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
+import { cleanupTestDatabase } from 'tests/helpers/database-test-helper';
 import {
   ValidationMessages,
   expectFieldError,
   expectValidationErrorStructure,
-} from '../../../../helpers/validation-test-helper';
+} from 'tests/helpers/validation-test-helper';
 
 describe('Account Routes', () => {
   let app: FastifyInstance;
@@ -22,15 +23,8 @@ describe('Account Routes', () => {
   });
 
   beforeEach(async () => {
-    // Clean database before each test using TRUNCATE CASCADE for PostgreSQL
-    try {
-      await prisma.$executeRaw`TRUNCATE TABLE ledger_logs, movements, accounts RESTART IDENTITY CASCADE`;
-    } catch (error) {
-      // Fallback to individual deletes if TRUNCATE fails
-      await prisma.ledgerLog.deleteMany();
-      await prisma.movement.deleteMany();
-      await prisma.account.deleteMany();
-    }
+    // Clean test database before each test
+    await cleanupTestDatabase();
   });
 
   describe('POST /accounts', () => {
