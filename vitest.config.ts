@@ -1,11 +1,15 @@
-import { defineConfig } from 'vitest/config';
 import path from 'node:path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    // Global configuration for all projects
     globals: true,
     environment: 'node',
     setupFiles: ['./tests/setup.ts'],
+    env: {
+      NODE_ENV: 'test',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -21,6 +25,38 @@ export default defineConfig({
     },
     testTimeout: 10000,
     hookTimeout: 10000,
+    // Configure projects with proper inheritance
+    projects: [
+      {
+        // Inherit global configuration
+        extends: true,
+        test: {
+          name: {
+            label: 'unit',
+            color: 'blue',
+          },
+          include: ['tests/unit/**/*.test.ts'],
+        },
+      },
+      {
+        // Inherit global configuration
+        extends: true,
+        test: {
+          name: {
+            label: 'integration',
+            color: 'green',
+          },
+          include: ['tests/integration/**/*.test.ts'],
+          // Run integration tests sequentially to avoid database conflicts
+          pool: 'threads',
+          poolOptions: {
+            threads: {
+              singleThread: true,
+            },
+          },
+        },
+      },
+    ],
   },
   resolve: {
     alias: {

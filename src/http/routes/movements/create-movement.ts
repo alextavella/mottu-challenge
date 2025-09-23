@@ -1,4 +1,8 @@
 import { CreateMovementUseCase } from '@/domain/usecases/movements/create-movement-usecase';
+import {
+  getAccountRepository,
+  getMovementRepository,
+} from '@/infrastructure/container/container';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -13,8 +17,6 @@ const createMovementBodySchema = z.object({
 const createMovementResponseSchema = z.object({
   movementId: z.uuid(),
 });
-
-const createMovementUseCase = new CreateMovementUseCase();
 
 export async function createMovement(fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().route({
@@ -31,6 +33,13 @@ export async function createMovement(fastify: FastifyInstance) {
     },
     handler: async (request, reply) => {
       const { accountId, amount, type, description } = request.body;
+
+      const movementRepository = getMovementRepository();
+      const accountRepository = getAccountRepository();
+      const createMovementUseCase = new CreateMovementUseCase(
+        movementRepository,
+        accountRepository,
+      );
 
       const movement = await createMovementUseCase.execute({
         accountId,

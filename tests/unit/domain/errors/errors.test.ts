@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { BusinessError } from '@/domain/errors/business-error';
 import { ServerError } from '@/domain/errors/server-error';
 
@@ -16,11 +15,11 @@ describe('Domain Errors', () => {
 
     it('should be throwable and catchable', () => {
       const message = 'Business rule violation';
-      
+
       expect(() => {
         throw new BusinessError(message);
       }).toThrow(BusinessError);
-      
+
       expect(() => {
         throw new BusinessError(message);
       }).toThrow(message);
@@ -60,11 +59,11 @@ describe('Domain Errors', () => {
 
     it('should be throwable and catchable', () => {
       const message = 'Internal server error';
-      
+
       expect(() => {
         throw new ServerError(message);
       }).toThrow(ServerError);
-      
+
       expect(() => {
         throw new ServerError(message);
       }).toThrow(message);

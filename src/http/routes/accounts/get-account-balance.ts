@@ -1,4 +1,5 @@
 import { GetAccountBalanceUseCase } from '@/domain/usecases/accounts/get-account-balance-usecase';
+import { getAccountRepository } from '@/infrastructure/container/container';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -12,8 +13,6 @@ const getAccountBalanceResponseSchema = z.object({
   name: z.string(),
   balance: z.number(),
 });
-
-const getAccountBalanceUseCase = new GetAccountBalanceUseCase();
 
 export async function getAccountBalance(fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().route({
@@ -30,6 +29,11 @@ export async function getAccountBalance(fastify: FastifyInstance) {
     },
     handler: async (request, reply) => {
       const { id: accountId } = request.params;
+
+      const accountRepository = getAccountRepository();
+      const getAccountBalanceUseCase = new GetAccountBalanceUseCase(
+        accountRepository,
+      );
 
       const accountBalance = await getAccountBalanceUseCase.execute({
         accountId,

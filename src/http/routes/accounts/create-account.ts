@@ -1,4 +1,5 @@
 import { CreateAccountUseCase } from '@/domain/usecases/accounts/create-account-usecase';
+import { getAccountRepository } from '@/infrastructure/container/container';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -12,8 +13,6 @@ const createAccountBodySchema = z.object({
 const createAccountResponseSchema = z.object({
   accountId: z.uuid(),
 });
-
-const createAccountUseCase = new CreateAccountUseCase();
 
 export async function createAccount(fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().route({
@@ -30,6 +29,9 @@ export async function createAccount(fastify: FastifyInstance) {
     },
     handler: async (request, reply) => {
       const { name, document, email } = request.body;
+
+      const accountRepository = getAccountRepository();
+      const createAccountUseCase = new CreateAccountUseCase(accountRepository);
 
       const account = await createAccountUseCase.execute({
         name,

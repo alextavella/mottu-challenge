@@ -1,6 +1,6 @@
-import prisma from '@/database/client';
 import { BusinessError } from '@/domain/errors/business-error';
-import { throwServerError } from '@/domain/errors/server-error';
+import { ServerError } from '@/domain/errors/server-error';
+import { AccountRepository } from '@/domain/repositories';
 import { getEventManager } from '@/lib/events';
 import { EventFactory } from '@/message';
 import { AccountEventType } from '@/message/events/account-event';
@@ -17,41 +17,51 @@ type Output = {
 };
 
 export class CreateAccountUseCase implements IUseCase<Input, Output> {
+  constructor(private readonly accountRepository: AccountRepository) {}
+
   async execute(input: Input): Promise<Output> {
     const { name, document, email } = input;
 
-    const accountExists = await prisma.account.findFirst({
-      where: {
-        OR: [{ document }, { email }],
-      },
-    });
+    try {
+      // Check if account already exists
+      const accountExists = await this.accountRepository.findByDocumentOrEmail(
+        document,
+        email,
+      );
 
-    if (!!accountExists) {
-      throw new BusinessError('Account already exists');
+      if (accountExists) {
+        throw new BusinessError(
+          'Account already exists with this document or email',
+        );
+      }
+
+      // Create the account
+      const account = await this.accountRepository.create({
+        name,
+        document,
+        email,
+      });
+
+      // Publish event
+      const event = EventFactory.createAccountEvent(
+        AccountEventType.CREATED,
+        account,
+      );
+
+      const eventManager = getEventManager();
+      await eventManager.publish(event).catch((error) => {
+        console.error('Failed to publish account event:', error);
+        // Don't fail the operation if event publishing fails
+      });
+
+      return {
+        accountId: account.id,
+      };
+    } catch (error) {
+      if (error instanceof BusinessError) {
+        throw error;
+      }
+      throw new ServerError('Failed to create account', error as Error);
     }
-
-    const account = await prisma.account
-      .create({
-        data: {
-          name,
-          document,
-          email,
-        },
-      })
-      .catch(throwServerError('Failed to create account'));
-
-    const event = EventFactory.createAccountEvent(
-      AccountEventType.CREATED,
-      account,
-    );
-
-    const eventManager = getEventManager();
-    await eventManager
-      .publish(event)
-      .catch(throwServerError('Failed to publish account event'));
-
-    return {
-      accountId: account.id,
-    };
   }
 }

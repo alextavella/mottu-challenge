@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { MovementEventType } from '@/message/events/movement-event';
 import { AccountEventType } from '@/message/events/account-event';
+import { MovementEventType } from '@/message/events/movement-event';
+import { describe, expect, it } from 'vitest';
 
 describe('Event Types', () => {
   describe('MovementEventType', () => {

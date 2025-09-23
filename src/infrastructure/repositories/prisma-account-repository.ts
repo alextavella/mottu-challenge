@@ -1,0 +1,53 @@
+import {
+  AccountRepository,
+  CreateAccountData,
+} from '@/domain/repositories/account-repository';
+import { Account, Prisma, PrismaClient } from '@prisma/client';
+
+export class PrismaAccountRepository implements AccountRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async create(data: CreateAccountData): Promise<Account> {
+    return await this.prisma.account.create({
+      data: {
+        name: data.name,
+        document: data.document,
+        email: data.email,
+        balance: new Prisma.Decimal(0), // Default balance is 0
+      },
+    });
+  }
+
+  async findById(id: string): Promise<Account | null> {
+    return await this.prisma.account.findUnique({
+      where: { id },
+    });
+  }
+
+  async findByDocumentOrEmail(
+    document: string,
+    email: string,
+  ): Promise<Account | null> {
+    return await this.prisma.account.findFirst({
+      where: {
+        OR: [{ document }, { email }],
+      },
+    });
+  }
+
+  async updateBalance(id: string, balance: Prisma.Decimal): Promise<Account> {
+    return await this.prisma.account.update({
+      where: { id },
+      data: { balance },
+    });
+  }
+
+  async getBalance(id: string): Promise<Prisma.Decimal | null> {
+    const account = await this.prisma.account.findUnique({
+      where: { id },
+      select: { balance: true },
+    });
+
+    return account?.balance ?? null;
+  }
+}
