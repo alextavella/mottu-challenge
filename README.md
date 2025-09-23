@@ -315,6 +315,6 @@ git commit -m "feat: nova funcionalidade"
 - [x] Implementar integração com RabbitMQ
 - [x] Implementar consumer para LedgerLog
 - [x] Configurar Vitest e testes básicos
-- [x] Expandir cobertura de testes unitários e de integração
+- [ ] Expandir cobertura de testes unitários e de integração
 - [ ] Implementar tratamento de erros e retry
 - [x] Adicionar documentação Swagger
