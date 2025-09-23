@@ -1,6 +1,6 @@
-import { ServerError } from '@/domain/errors/server-error';
+import { ServerError } from '@/core/errors/server.error';
 
-describe('ServerError', () => {
+describe('SERVER_ERROR', () => {
   it('should create a server error with message', () => {
     const message = 'Database connection failed';
     const error = new ServerError(message);
@@ -8,7 +8,7 @@ describe('ServerError', () => {
     expect(error).toBeInstanceOf(ServerError);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toBe(message);
-    expect(error.name).toBe('ServerError');
+    expect(error.name).toBe('SERVER_ERROR');
   });
 
   it('should create a server error with message and original error', () => {
@@ -32,7 +32,7 @@ describe('ServerError', () => {
     const error = new ServerError('Test server error');
 
     expect(error.stack).toBeDefined();
-    expect(error.stack).toContain('ServerError: Test server error');
+    expect(error.stack).toContain('SERVER_ERROR: Test server error');
   });
 
   it('should be throwable and catchable', () => {

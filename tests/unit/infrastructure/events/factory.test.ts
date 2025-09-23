@@ -1,6 +1,6 @@
-import { EventFactory } from '@/message';
-import { AccountEventType } from '@/message/events/account-event';
-import { MovementEventType } from '@/message/events/movement-event';
+import { AccountEventType } from '@/infrastructure/events/events/account-event';
+import { MovementEventType } from '@/infrastructure/events/events/movement-event';
+import { EventFactory } from '@/infrastructure/events/index';
 import { Prisma } from '@prisma/client';
 
 describe('EventFactory', () => {

@@ -1,19 +1,19 @@
-import { RabbitMQConnection } from '@/lib/events/connection';
-import { RabbitMQEventConsumer } from '@/lib/events/consumer';
-import { EventManager } from '@/lib/events/event-manager';
-import { RabbitMQEventPublisher } from '@/lib/events/publisher';
+import { RabbitMQConnection } from '@/infrastructure/events/connection';
+import { RabbitMQEventConsumer } from '@/infrastructure/events/consumer';
+import { EventManager } from '@/infrastructure/events/event-manager';
+import { RabbitMQEventPublisher } from '@/infrastructure/events/publisher';
 import {
   TestEventType,
   type BaseEvent,
   type EventManagerOptions,
-} from '@/lib/events/types';
-import { createEventSystemMocks } from 'tests/mocks/events/event-system.mock';
+} from '@/infrastructure/events/types';
+import { createEventSystemMocks } from 'tests/mocks/infrastructure/events/event-system.mock';
 import type { Mocked } from 'vitest';
 
 // Mock the dependencies
-vi.mock('@/lib/events/connection');
-vi.mock('@/lib/events/publisher');
-vi.mock('@/lib/events/consumer');
+vi.mock('@/infrastructure/events/connection');
+vi.mock('@/infrastructure/events/publisher');
+vi.mock('@/infrastructure/events/consumer');
 
 describe('EventManager', () => {
   let eventManager: EventManager;

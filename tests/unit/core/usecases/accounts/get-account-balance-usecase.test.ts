@@ -1,13 +1,14 @@
-import { BusinessError } from '@/domain/errors/business-error';
-import { ServerError } from '@/domain/errors/server-error';
-import { AccountRepository } from '@/domain/repositories/account-repository';
-import { GetAccountBalanceUseCase } from '@/domain/usecases/accounts/get-account-balance-usecase';
+import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
+import { AccountNotFoundError } from '@/core/errors/account.errors';
+import { ServerError } from '@/core/errors/server.error';
+import { GetAccountBalanceUseCase } from '@/core/usecases/accounts/get-account-balance-usecase';
 import { Prisma } from '@prisma/client';
-import { createAccountRepositoryMock } from 'tests/mocks/repositories/account-repository.mock';
+import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
+import { createMockAccountData } from 'tests/mocks/core/test-data.mock';
 
 describe('GetAccountBalanceUseCase', () => {
   let getAccountBalanceUseCase: GetAccountBalanceUseCase;
-  let mockAccountRepository: AccountRepository;
+  let mockAccountRepository: IAccountRepository;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -20,14 +21,11 @@ describe('GetAccountBalanceUseCase', () => {
   describe('execute', () => {
     it('should return account balance successfully', async () => {
       const accountId = 'account-id-123';
-      const account = {
+      const account = createMockAccountData({
         id: accountId,
         name: 'John Doe',
-        document: '12345678901',
-        email: 'john@example.com',
         balance: new Prisma.Decimal(1500.5),
-        createdAt: new Date(),
-      };
+      });
 
       vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
 
@@ -41,14 +39,14 @@ describe('GetAccountBalanceUseCase', () => {
       expect(mockAccountRepository.findById).toHaveBeenCalledWith(accountId);
     });
 
-    it('should throw BusinessError if account not found', async () => {
+    it('should throw AccountNotFoundError if account not found', async () => {
       const accountId = 'non-existent-account';
 
       vi.mocked(mockAccountRepository.findById).mockResolvedValue(null);
 
       await expect(
         getAccountBalanceUseCase.execute({ accountId }),
-      ).rejects.toThrow(new BusinessError('Account not found'));
+      ).rejects.toThrow(new AccountNotFoundError('non-existent-account'));
 
       expect(mockAccountRepository.findById).toHaveBeenCalledWith(accountId);
     });
@@ -72,14 +70,11 @@ describe('GetAccountBalanceUseCase', () => {
 
     it('should handle zero balance', async () => {
       const accountId = 'account-id-123';
-      const account = {
-        id: accountId,
+      const account = createMockAccountData({
+        accountId,
         name: 'John Doe',
-        document: '12345678901',
-        email: 'john@example.com',
         balance: new Prisma.Decimal(0),
-        createdAt: new Date(),
-      };
+      });
 
       vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
 
@@ -95,14 +90,12 @@ describe('GetAccountBalanceUseCase', () => {
 
     it('should handle negative balance', async () => {
       const accountId = 'account-id-123';
-      const account = {
+      const account = createMockAccountData({
         id: accountId,
         name: 'John Doe',
         document: '12345678901',
-        email: 'john@example.com',
         balance: new Prisma.Decimal(-100.25),
-        createdAt: new Date(),
-      };
+      });
 
       vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
 
@@ -118,14 +111,13 @@ describe('GetAccountBalanceUseCase', () => {
 
     it('should handle large balance values', async () => {
       const accountId = 'account-id-123';
-      const account = {
+      const account = createMockAccountData({
         id: accountId,
         name: 'John Doe',
         document: '12345678901',
         email: 'john@example.com',
         balance: new Prisma.Decimal('999999999.99'),
-        createdAt: new Date(),
-      };
+      });
 
       vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
 

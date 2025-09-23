@@ -1,14 +1,13 @@
-import prisma from '@/database/client';
-import { createServer } from '@/http/server';
+import { prisma } from '@/infrastructure/database/client';
+import { createServer } from '@/infrastructure/http/server';
 import { Prisma } from '@prisma/client';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   ValidationMessages,
   expectFieldError,
   expectValidationErrorStructure,
-} from '../../helpers/validation-test-helper';
+} from '../../../../helpers/validation-test-helper';
 
 describe('Movement Routes', () => {
   let app: FastifyInstance;
@@ -142,7 +141,7 @@ describe('Movement Routes', () => {
         .expect(400);
 
       expect(response.body).toMatchObject({
-        error: 'Validation Error',
+        error: 'VALIDATION_ERROR',
         message: 'Os dados enviados são inválidos',
         errors: expect.any(Array),
         fields: expect.any(Object),
@@ -166,7 +165,7 @@ describe('Movement Routes', () => {
         .expect(400); // BusinessError returns 400, not 404
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('BusinessError');
+      expect(response.body.error).toContain('AccountNotFoundError');
     });
 
     it('should return 400 for insufficient balance on debit', async () => {
@@ -183,7 +182,7 @@ describe('Movement Routes', () => {
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('BusinessError');
+      expect(response.body.error).toContain('InsufficientFundsError');
     });
 
     it('should reject zero amount movement', async () => {
@@ -200,7 +199,7 @@ describe('Movement Routes', () => {
         .expect(400); // Validation should reject zero amounts
 
       expect(response.body).toMatchObject({
-        error: 'Validation Error',
+        error: 'VALIDATION_ERROR',
         message: 'Os dados enviados são inválidos',
         errors: expect.arrayContaining([
           expect.stringContaining('Valor deve ser positivo'),
@@ -250,7 +249,7 @@ describe('Movement Routes', () => {
         .expect(400);
 
       expect(response.body).toMatchObject({
-        error: 'Validation Error',
+        error: 'VALIDATION_ERROR',
         message: 'Os dados enviados são inválidos',
         errors: expect.arrayContaining([
           expect.stringContaining('Valor deve ser positivo'),
@@ -275,7 +274,7 @@ describe('Movement Routes', () => {
         .expect(400);
 
       expect(response.body).toMatchObject({
-        error: 'Validation Error',
+        error: 'VALIDATION_ERROR',
         message: 'Os dados enviados são inválidos',
         errors: expect.any(Array),
         fields: expect.objectContaining({

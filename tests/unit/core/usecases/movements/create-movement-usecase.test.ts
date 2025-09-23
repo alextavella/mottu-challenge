@@ -1,16 +1,17 @@
-import { BusinessError } from '@/domain/errors/business-error';
-import { ServerError } from '@/domain/errors/server-error';
-import { AccountRepository } from '@/domain/repositories/account-repository';
-import { MovementRepository } from '@/domain/repositories/movement-repository';
-import { CreateMovementUseCase } from '@/domain/usecases/movements/create-movement-usecase';
+import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
+import { IMovementRepository } from '@/core/contracts/repositories/movement-repository';
+import { AccountNotFoundError } from '@/core/errors/account.errors';
+import { InsufficientFundsError } from '@/core/errors/movement.errors';
+import { ServerError } from '@/core/errors/server.error';
+import { CreateMovementUseCase } from '@/core/usecases/movements/create-movement-usecase';
 import { Prisma } from '@prisma/client';
-import { createAccountRepositoryMock } from 'tests/mocks/repositories/account-repository.mock';
-import { createMovementRepositoryMock } from 'tests/mocks/repositories/movement-repository.mock';
+import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
+import { createMovementRepositoryMock } from 'tests/mocks/core/repositories/movement-repository.mock';
 
 describe('CreateMovementUseCase', () => {
   let createMovementUseCase: CreateMovementUseCase;
-  let mockMovementRepository: MovementRepository;
-  let mockAccountRepository: AccountRepository;
+  let mockMovementRepository: IMovementRepository;
+  let mockAccountRepository: IAccountRepository;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -131,7 +132,7 @@ describe('CreateMovementUseCase', () => {
       );
     });
 
-    it('should throw BusinessError if account not found', async () => {
+    it('should throw AccountNotFoundError if account not found', async () => {
       const movementData = {
         accountId: 'non-existent-account',
         amount: 100,
@@ -142,7 +143,7 @@ describe('CreateMovementUseCase', () => {
       vi.mocked(mockAccountRepository.findById).mockResolvedValue(null);
 
       await expect(createMovementUseCase.execute(movementData)).rejects.toThrow(
-        new BusinessError('Account not found'),
+        new AccountNotFoundError('non-existent-account'),
       );
 
       expect(mockAccountRepository.findById).toHaveBeenCalledWith(
@@ -152,7 +153,7 @@ describe('CreateMovementUseCase', () => {
       expect(mockAccountRepository.updateBalance).not.toHaveBeenCalled();
     });
 
-    it('should throw BusinessError if debit amount exceeds balance', async () => {
+    it('should throw InsufficientFundsError if debit amount exceeds balance', async () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 1000,
@@ -175,7 +176,7 @@ describe('CreateMovementUseCase', () => {
       );
 
       await expect(createMovementUseCase.execute(movementData)).rejects.toThrow(
-        new BusinessError('Insufficient balance'),
+        new InsufficientFundsError('account-id-123', 1000, 500),
       );
 
       expect(mockAccountRepository.findById).toHaveBeenCalledWith(

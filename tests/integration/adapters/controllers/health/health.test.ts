@@ -1,4 +1,4 @@
-import { createServer } from '@/http/server';
+import { createServer } from '@/infrastructure/http/server';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';

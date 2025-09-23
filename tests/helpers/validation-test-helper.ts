@@ -14,7 +14,7 @@ export interface ValidationErrorResponse {
  */
 export function expectValidationErrorStructure(response: any): void {
   expect(response.body).toMatchObject({
-    error: 'Validation Error',
+    error: 'VALIDATION_ERROR',
     message: 'Os dados enviados são inválidos',
     errors: expect.any(Array),
     fields: expect.any(Object),

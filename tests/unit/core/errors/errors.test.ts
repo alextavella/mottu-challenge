@@ -1,32 +1,7 @@
-import { BusinessError } from '@/domain/errors/business-error';
-import { ServerError } from '@/domain/errors/server-error';
+import { ServerError } from '@/core/errors/server.error';
 
 describe('Domain Errors', () => {
-  describe('BusinessError', () => {
-    it('should create a business error with message', () => {
-      const message = 'Invalid operation';
-      const error = new BusinessError(message);
-
-      expect(error).toBeInstanceOf(BusinessError);
-      expect(error).toBeInstanceOf(Error);
-      expect(error.message).toBe(message);
-      expect(error.name).toBe('BusinessError');
-    });
-
-    it('should be throwable and catchable', () => {
-      const message = 'Business rule violation';
-
-      expect(() => {
-        throw new BusinessError(message);
-      }).toThrow(BusinessError);
-
-      expect(() => {
-        throw new BusinessError(message);
-      }).toThrow(message);
-    });
-  });
-
-  describe('ServerError', () => {
+  describe('SERVER_ERROR', () => {
     it('should create a server error with message only', () => {
       const message = 'Database connection failed';
       const error = new ServerError(message);
@@ -34,7 +9,7 @@ describe('Domain Errors', () => {
       expect(error).toBeInstanceOf(ServerError);
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toBe(message);
-      expect(error.name).toBe('ServerError');
+      expect(error.name).toBe('SERVER_ERROR');
       expect(error.originalError).toBeUndefined();
     });
 
@@ -45,7 +20,7 @@ describe('Domain Errors', () => {
 
       expect(error.message).toBe(message);
       expect(error.originalError).toBe(originalError);
-      expect(error.name).toBe('ServerError');
+      expect(error.name).toBe('SERVER_ERROR');
     });
 
     it('should create a server error with only original error', () => {
@@ -54,7 +29,7 @@ describe('Domain Errors', () => {
 
       expect(error.message).toBe('Network error');
       expect(error.originalError).toBe(originalError);
-      expect(error.name).toBe('ServerError');
+      expect(error.name).toBe('SERVER_ERROR');
     });
 
     it('should be throwable and catchable', () => {

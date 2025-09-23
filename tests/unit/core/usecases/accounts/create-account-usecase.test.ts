@@ -1,17 +1,17 @@
-import { BusinessError } from '@/domain/errors/business-error';
-import { ServerError } from '@/domain/errors/server-error';
-import { AccountRepository } from '@/domain/repositories/account-repository';
-import { CreateAccountUseCase } from '@/domain/usecases/accounts/create-account-usecase';
+import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
+import { BusinessRuleViolationError } from '@/core/errors/account.errors';
+import { ServerError } from '@/core/errors/server.error';
+import { CreateAccountUseCase } from '@/core/usecases/accounts/create-account-usecase';
 import { Prisma } from '@prisma/client';
-import { createAccountRepositoryMock } from 'tests/mocks/repositories/account-repository.mock';
+import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
 import {
   createMockAccountData,
   createMockAccountInput,
-} from 'tests/mocks/utils/test-data.mock';
+} from 'tests/mocks/core/test-data.mock';
 
 describe('CreateAccountUseCase', () => {
   let createAccountUseCase: CreateAccountUseCase;
-  let mockAccountRepository: AccountRepository;
+  let mockAccountRepository: IAccountRepository;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -45,7 +45,7 @@ describe('CreateAccountUseCase', () => {
       });
     });
 
-    it('should throw BusinessError if account already exists', async () => {
+    it('should throw BusinessRuleViolationError if account already exists', async () => {
       const accountData = {
         name: 'John Doe',
         document: '12345678901',
@@ -67,7 +67,9 @@ describe('CreateAccountUseCase', () => {
       );
 
       await expect(createAccountUseCase.execute(accountData)).rejects.toThrow(
-        new BusinessError('Account already exists with this document or email'),
+        new BusinessRuleViolationError(
+          'Account already exists with this document or email',
+        ),
       );
 
       expect(mockAccountRepository.findByDocumentOrEmail).toHaveBeenCalledWith(

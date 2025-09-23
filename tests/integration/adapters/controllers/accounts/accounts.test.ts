@@ -1,12 +1,12 @@
-import prisma from '@/database/client';
-import { createServer } from '@/http/server';
+import { prisma } from '@/infrastructure/database/client';
+import { createServer } from '@/infrastructure/http/server';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import {
   ValidationMessages,
   expectFieldError,
   expectValidationErrorStructure,
-} from 'tests/helpers/validation-test-helper';
+} from '../../../../helpers/validation-test-helper';
 
 describe('Account Routes', () => {
   let app: FastifyInstance;
@@ -88,7 +88,7 @@ describe('Account Routes', () => {
         .expect(400);
 
       expect(response.body).toMatchObject({
-        error: 'Validation Error',
+        error: 'VALIDATION_ERROR',
         message: 'Os dados enviados são inválidos',
         errors: expect.arrayContaining([
           expect.stringContaining(
@@ -130,7 +130,7 @@ describe('Account Routes', () => {
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('BusinessError');
+      expect(response.body.error).toContain('BusinessRuleViolationError');
     });
 
     it('should handle different document formats', async () => {
