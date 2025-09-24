@@ -325,10 +325,11 @@ describe('Movement Routes', () => {
       await waitForEventProcessing();
 
       // Verify final balance: 1000 + 100 - 50 = 1050
-      const response3 = await supertest(app.server)
-        .get(`/v1/accounts/${testAccountId}/balance`)
-        .expect(200);
+      const response3 = await supertest(app.server).get(
+        `/v1/accounts/${testAccountId}/balance`,
+      );
 
+      expect(response3.status).toBe(200);
       expect(response3.body.balance).toBe(1050);
     });
 
