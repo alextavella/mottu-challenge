@@ -1,6 +1,6 @@
-import { prisma } from '@/infrastructure/database/client';
-import { getEventManager } from '@/infrastructure/events/event-manager';
-import { createServer } from '@/infrastructure/http/server';
+import { createServer } from '@/http/server';
+import { prisma } from '@/infra/database/client';
+import { getEventManager } from '@/infra/events/event-manager';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 

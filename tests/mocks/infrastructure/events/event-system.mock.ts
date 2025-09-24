@@ -1,11 +1,7 @@
-import { RabbitMQConnection } from '@/infrastructure/events/connection';
-import { RabbitMQEventConsumer } from '@/infrastructure/events/consumer';
-import { RabbitMQEventPublisher } from '@/infrastructure/events/publisher';
-import {
-  BaseEvent,
-  IEventHandler,
-  IEventManager,
-} from '@/infrastructure/events/types';
+import { RabbitMQConnection } from '@/infra/events/connection';
+import { RabbitMQEventConsumer } from '@/infra/events/consumer';
+import { RabbitMQEventPublisher } from '@/infra/events/publisher';
+import { BaseEvent, IEventHandler, IEventManager } from '@/infra/events/types';
 import type { Mocked } from 'vitest';
 
 /**

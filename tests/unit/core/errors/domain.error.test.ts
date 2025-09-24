@@ -1,4 +1,4 @@
-import { DomainError } from '@/core/errors/domain.error';
+import { DomainError } from '@/domain/errors/domain.error';
 
 // Concrete implementation for testing abstract class
 class TestDomainError extends DomainError {

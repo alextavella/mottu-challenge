@@ -1,4 +1,4 @@
-import { ServerError, throwServerError } from '@/core/errors/server.error';
+import { ServerError, throwServerError } from '@/domain/errors/server.error';
 
 describe('ServerError', () => {
   describe('constructor overloads', () => {

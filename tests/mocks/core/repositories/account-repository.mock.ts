@@ -1,4 +1,4 @@
-import type { IAccountRepository } from '@/core/contracts/repositories/account-repository';
+import type { IAccountRepository } from '@/domain/contracts/repositories/account-repository';
 
 /**
  * Mock do IAccountRepository para uso em testes unitários

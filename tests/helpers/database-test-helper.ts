@@ -1,4 +1,4 @@
-import { prisma } from '@/infrastructure/database/client';
+import { prisma } from '@/infra/database/client';
 
 /**
  * Clean test database before each test

@@ -1,5 +1,6 @@
 @baseUrl = http://localhost:3000
-@accountId = 3d8566ff-1a69-4dee-a3c6-6ca5389c0100
+@accountId = d280b3e4-6a63-4d00-a769-921adea15ec8
+@accountId2 = 77ff3a33-a024-4a01-b0e8-0ea45012cedd
 
 ### Create movement [CREDIT]
 # @name createMovement
@@ -8,7 +9,7 @@ Content-Type: application/json
 
 {
   "accountId": "{{accountId}}",
-  "amount": 200,
+  "amount": 100,
   "type": "CREDIT",
   "description": "Compra no mercado"
 }
@@ -19,7 +20,7 @@ POST {{baseUrl}}/v1/movements
 Content-Type: application/json
 
 {
-  "accountId": "{{accountId}}",
+  "accountId": "{{accountId2}}",
   "amount": 100,
   "type": "DEBIT",
   "description": "Venda no mercado"

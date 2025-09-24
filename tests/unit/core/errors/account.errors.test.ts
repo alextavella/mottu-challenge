@@ -1,8 +1,8 @@
 import {
   AccountNotFoundError,
   BusinessRuleViolationError,
-} from '@/core/errors/account.errors';
-import { DomainError } from '@/core/errors/domain.error';
+} from '@/domain/errors/account.errors';
+import { DomainError } from '@/domain/errors/domain.error';
 
 describe('Account Errors', () => {
   describe('BusinessRuleViolationError', () => {

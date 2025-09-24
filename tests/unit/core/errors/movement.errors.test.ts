@@ -1,5 +1,5 @@
-import { DomainError } from '@/core/errors/domain.error';
-import { InsufficientFundsError } from '@/core/errors/movement.errors';
+import { DomainError } from '@/domain/errors/domain.error';
+import { InsufficientFundsError } from '@/domain/errors/movement.errors';
 
 describe('Movement Errors', () => {
   describe('InsufficientFundsError', () => {

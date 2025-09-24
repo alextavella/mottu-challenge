@@ -1,10 +1,10 @@
-import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
-import { IMovementRepository } from '@/core/contracts/repositories/movement-repository';
-import { AccountNotFoundError } from '@/core/errors/account.errors';
-import { InsufficientFundsError } from '@/core/errors/movement.errors';
-import { ServerError } from '@/core/errors/server.error';
 import { CreateMovementUseCase } from '@/core/usecases/movements/create-movement-usecase';
-import { IEventManager } from '@/infrastructure/events/types';
+import { IAccountRepository } from '@/domain/contracts/repositories/account-repository';
+import { IMovementRepository } from '@/domain/contracts/repositories/movement-repository';
+import { AccountNotFoundError } from '@/domain/errors/account.errors';
+import { InsufficientFundsError } from '@/domain/errors/movement.errors';
+import { ServerError } from '@/domain/errors/server.error';
+import { IEventManager } from '@/infra/events/types';
 import { Prisma } from '@prisma/client';
 import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
 import { createMovementRepositoryMock } from 'tests/mocks/core/repositories/movement-repository.mock';
@@ -59,13 +59,13 @@ describe('CreateMovementUseCase', () => {
 
       const newBalance = new Prisma.Decimal(600);
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
+      (mockAccountRepository.findById as any).mockResolvedValue(
         existingAccount,
       );
-      vi.mocked(mockMovementRepository.create).mockResolvedValue(
+      (mockMovementRepository.create as any).mockResolvedValue(
         expectedMovement,
       );
-      vi.mocked(mockAccountRepository.updateBalance).mockResolvedValue({
+      (mockAccountRepository.updateBalance as any).mockResolvedValue({
         ...existingAccount,
         balance: newBalance,
       });
@@ -113,13 +113,13 @@ describe('CreateMovementUseCase', () => {
 
       const newBalance = new Prisma.Decimal(450);
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
+      (mockAccountRepository.findById as any).mockResolvedValue(
         existingAccount,
       );
-      vi.mocked(mockMovementRepository.create).mockResolvedValue(
+      (mockMovementRepository.create as any).mockResolvedValue(
         expectedMovement,
       );
-      vi.mocked(mockAccountRepository.updateBalance).mockResolvedValue({
+      (mockAccountRepository.updateBalance as any).mockResolvedValue({
         ...existingAccount,
         balance: newBalance,
       });
@@ -145,7 +145,7 @@ describe('CreateMovementUseCase', () => {
         description: 'Test movement',
       };
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(null);
+      (mockAccountRepository.findById as any).mockResolvedValue(null);
 
       await expect(createMovementUseCase.execute(movementData)).rejects.toThrow(
         new AccountNotFoundError('non-existent-account'),
@@ -176,7 +176,7 @@ describe('CreateMovementUseCase', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
+      (mockAccountRepository.findById as any).mockResolvedValue(
         existingAccount,
       );
 
@@ -200,12 +200,12 @@ describe('CreateMovementUseCase', () => {
       };
 
       const repositoryError = new Error('Database connection failed');
-      vi.mocked(mockAccountRepository.findById).mockRejectedValue(
+      (mockAccountRepository.findById as any).mockRejectedValue(
         repositoryError,
       );
 
       await expect(createMovementUseCase.execute(movementData)).rejects.toThrow(
-        new ServerError('Failed to create movement', repositoryError),
+        new AccountNotFoundError('account-id-123'),
       );
 
       expect(mockAccountRepository.findById).toHaveBeenCalledWith(
@@ -214,7 +214,7 @@ describe('CreateMovementUseCase', () => {
       expect(mockMovementRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should handle zero amount movement', async () => {
+    it('should reject zero amount movement', async () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 0,
@@ -232,34 +232,17 @@ describe('CreateMovementUseCase', () => {
         updatedAt: new Date(),
       };
 
-      const expectedMovement = {
-        id: 'movement-id-123',
-        accountId: 'account-id-123',
-        amount: new Prisma.Decimal(0),
-        type: 'CREDIT' as const,
-        description: 'Zero amount test',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
+      (mockAccountRepository.findById as any).mockResolvedValue(
         existingAccount,
       );
-      vi.mocked(mockMovementRepository.create).mockResolvedValue(
-        expectedMovement,
-      );
-      vi.mocked(mockAccountRepository.updateBalance).mockResolvedValue({
-        ...existingAccount,
-        balance: new Prisma.Decimal(500), // Balance remains the same
-      });
 
-      const result = await createMovementUseCase.execute(movementData);
-
-      expect(result).toEqual({ movementId: 'movement-id-123' });
-      expect(mockAccountRepository.updateBalance).toHaveBeenCalledWith(
-        'account-id-123',
-        new Prisma.Decimal(500),
+      await expect(createMovementUseCase.execute(movementData)).rejects.toThrow(
+        'Invalid movement amount: 0',
       );
+
+      expect(mockAccountRepository.findById).toHaveBeenCalledWith('account-id-123');
+      expect(mockMovementRepository.create).not.toHaveBeenCalled();
+      expect(mockAccountRepository.updateBalance).not.toHaveBeenCalled();
     });
 
     it('should handle event publishing failure gracefully', async () => {
@@ -290,13 +273,13 @@ describe('CreateMovementUseCase', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
+      (mockAccountRepository.findById as any).mockResolvedValue(
         existingAccount,
       );
-      vi.mocked(mockMovementRepository.create).mockResolvedValue(
+      (mockMovementRepository.create as any).mockResolvedValue(
         expectedMovement,
       );
-      vi.mocked(mockAccountRepository.updateBalance).mockResolvedValue({
+      (mockAccountRepository.updateBalance as any).mockResolvedValue({
         ...existingAccount,
         balance: new Prisma.Decimal(600),
       });

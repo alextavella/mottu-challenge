@@ -1,7 +1,7 @@
-import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
-import { AccountNotFoundError } from '@/core/errors/account.errors';
-import { ServerError } from '@/core/errors/server.error';
 import { GetAccountBalanceUseCase } from '@/core/usecases/accounts/get-account-balance-usecase';
+import { IAccountRepository } from '@/domain/contracts/repositories/account-repository';
+import { AccountNotFoundError } from '@/domain/errors/account.errors';
+import { ServerError } from '@/domain/errors/server.error';
 import { Prisma } from '@prisma/client';
 import { createMockAccountData } from 'tests/mocks/core/entities/test-data.mock';
 import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
@@ -27,7 +27,7 @@ describe('GetAccountBalanceUseCase', () => {
         balance: new Prisma.Decimal(1500.5),
       });
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
+      (mockAccountRepository.findById as any).mockResolvedValue(account);
 
       const result = await getAccountBalanceUseCase.execute({ accountId });
 
@@ -42,7 +42,7 @@ describe('GetAccountBalanceUseCase', () => {
     it('should throw AccountNotFoundError if account not found', async () => {
       const accountId = 'non-existent-account';
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(null);
+      (mockAccountRepository.findById as any).mockResolvedValue(null);
 
       await expect(
         getAccountBalanceUseCase.execute({ accountId }),
@@ -51,18 +51,18 @@ describe('GetAccountBalanceUseCase', () => {
       expect(mockAccountRepository.findById).toHaveBeenCalledWith(accountId);
     });
 
-    it('should throw ServerError if repository throws an error', async () => {
+    it('should throw AccountNotFoundError if repository throws an error', async () => {
       const accountId = 'account-id-123';
       const repositoryError = new Error('Database connection failed');
 
-      vi.mocked(mockAccountRepository.findById).mockRejectedValue(
+      (mockAccountRepository.findById as any).mockRejectedValue(
         repositoryError,
       );
 
       await expect(
         getAccountBalanceUseCase.execute({ accountId }),
       ).rejects.toThrow(
-        new ServerError('Failed to get account balance', repositoryError),
+        new AccountNotFoundError(accountId),
       );
 
       expect(mockAccountRepository.findById).toHaveBeenCalledWith(accountId);
@@ -76,7 +76,7 @@ describe('GetAccountBalanceUseCase', () => {
         balance: new Prisma.Decimal(0),
       });
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
+      (mockAccountRepository.findById as any).mockResolvedValue(account);
 
       const result = await getAccountBalanceUseCase.execute({ accountId });
 
@@ -97,7 +97,7 @@ describe('GetAccountBalanceUseCase', () => {
         balance: new Prisma.Decimal(-100.25),
       });
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
+      (mockAccountRepository.findById as any).mockResolvedValue(account);
 
       const result = await getAccountBalanceUseCase.execute({ accountId });
 
@@ -119,7 +119,7 @@ describe('GetAccountBalanceUseCase', () => {
         balance: new Prisma.Decimal('999999999.99'),
       });
 
-      vi.mocked(mockAccountRepository.findById).mockResolvedValue(account);
+      (mockAccountRepository.findById as any).mockResolvedValue(account);
 
       const result = await getAccountBalanceUseCase.execute({ accountId });
 

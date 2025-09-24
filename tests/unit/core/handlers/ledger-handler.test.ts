@@ -1,11 +1,11 @@
 import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { LedgerLogHandler } from '@/core/handlers/ledger-handler';
-import { prisma } from '@/infrastructure/database/client';
+import { prisma } from '@/infra/database/client';
 import { MovementType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 // Mock the database client
-vi.mock('@/infrastructure/database/client', () => ({
+vi.mock('@/infra/database/client', () => ({
   prisma: {
     ledgerLog: {
       create: vi.fn(),
@@ -15,24 +15,25 @@ vi.mock('@/infrastructure/database/client', () => ({
 
 describe('LedgerLogHandler', () => {
   let handler: LedgerLogHandler;
-  const mockLedgerLogCreate = vi.mocked(prisma.ledgerLog.create);
+  let mockLedgerLogCreate: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLedgerLogCreate = vi.mocked(prisma.ledgerLog.create);
     handler = new LedgerLogHandler();
   });
 
   describe('handle', () => {
     it('should create ledger log for movement event', async () => {
       const movementEvent: MovementEvent = {
-        id: 'event-123',
+        id: '550e8400-e29b-41d4-a716-446655440000',
         type: MovementEventType.CREATED,
         timestamp: new Date('2024-01-01T00:00:00Z'),
         version: '1.0',
-        correlationId: 'correlation-123',
+        correlationId: '550e8400-e29b-41d4-a716-446655440001',
         data: {
-          id: 'movement-123',
-          accountId: 'account-456',
+          id: '550e8400-e29b-41d4-a716-446655440002',
+          accountId: '550e8400-e29b-41d4-a716-446655440003',
           amount: new Decimal(100.5),
           type: MovementType.CREDIT,
           description: 'Test movement',
@@ -57,13 +58,13 @@ describe('LedgerLogHandler', () => {
 
     it('should handle debit movement events', async () => {
       const movementEvent: MovementEvent = {
-        id: 'event-456',
+        id: '550e8400-e29b-41d4-a716-446655440004',
         type: MovementEventType.CREATED,
         timestamp: new Date('2024-01-01T00:00:00Z'),
         version: '1.0',
         data: {
-          id: 'movement-456',
-          accountId: 'account-789',
+          id: '550e8400-e29b-41d4-a716-446655440005',
+          accountId: '550e8400-e29b-41d4-a716-446655440006',
           amount: new Decimal(50.25),
           type: MovementType.DEBIT,
           description: 'Debit test',
@@ -88,13 +89,13 @@ describe('LedgerLogHandler', () => {
 
     it('should throw error when database operation fails', async () => {
       const movementEvent: MovementEvent = {
-        id: 'event-789',
+        id: '550e8400-e29b-41d4-a716-446655440007',
         type: MovementEventType.CREATED,
         timestamp: new Date('2024-01-01T00:00:00Z'),
         version: '1.0',
         data: {
-          id: 'movement-789',
-          accountId: 'account-123',
+          id: '550e8400-e29b-41d4-a716-446655440008',
+          accountId: '550e8400-e29b-41d4-a716-446655440009',
           amount: new Decimal(75.0),
           type: MovementType.CREDIT,
           description: 'Failed movement',
@@ -112,13 +113,13 @@ describe('LedgerLogHandler', () => {
 
     it('should serialize event data correctly', async () => {
       const movementEvent: MovementEvent = {
-        id: 'event-serialization',
+        id: '550e8400-e29b-41d4-a716-446655440010',
         type: MovementEventType.CREATED,
         timestamp: new Date('2024-01-01T00:00:00Z'),
         version: '1.0',
         data: {
-          id: 'movement-serialization',
-          accountId: 'account-serialization',
+          id: '550e8400-e29b-41d4-a716-446655440011',
+          accountId: '550e8400-e29b-41d4-a716-446655440012',
           amount: new Decimal(123.45),
           type: MovementType.CREDIT,
           description: 'Serialization test',
@@ -140,13 +141,13 @@ describe('LedgerLogHandler', () => {
 
     it('should handle zero amount movements', async () => {
       const movementEvent: MovementEvent = {
-        id: 'event-zero',
+        id: '550e8400-e29b-41d4-a716-446655440013',
         type: MovementEventType.CREATED,
         timestamp: new Date('2024-01-01T00:00:00Z'),
         version: '1.0',
         data: {
-          id: 'movement-zero',
-          accountId: 'account-zero',
+          id: '550e8400-e29b-41d4-a716-446655440014',
+          accountId: '550e8400-e29b-41d4-a716-446655440015',
           amount: new Decimal(0),
           type: MovementType.CREDIT,
           description: 'Zero amount test',
@@ -167,14 +168,14 @@ describe('LedgerLogHandler', () => {
 
     it('should handle events without correlation ID', async () => {
       const movementEvent: MovementEvent = {
-        id: 'event-no-correlation',
+        id: '550e8400-e29b-41d4-a716-446655440016',
         type: MovementEventType.CREATED,
         timestamp: new Date('2024-01-01T00:00:00Z'),
         version: '1.0',
         // No correlationId
         data: {
-          id: 'movement-no-correlation',
-          accountId: 'account-no-correlation',
+          id: '550e8400-e29b-41d4-a716-446655440017',
+          accountId: '550e8400-e29b-41d4-a716-446655440018',
           amount: new Decimal(99.99),
           type: MovementType.DEBIT,
           description: 'No correlation ID test',

@@ -1,5 +1,5 @@
-import { prisma } from '@/infrastructure/database/client';
-import { createServer } from '@/infrastructure/http/server';
+import { createServer } from '@/http/server';
+import { prisma } from '@/infra/database/client';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import { cleanupTestDatabase } from 'tests/helpers/database-test-helper';

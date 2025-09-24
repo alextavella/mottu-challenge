@@ -1,4 +1,4 @@
-import type { IMovementRepository } from '@/core/contracts/repositories/movement-repository';
+import type { IMovementRepository } from '@/domain/contracts/repositories/movement-repository';
 
 /**
  * Mock do IMovementRepository para uso em testes unitários

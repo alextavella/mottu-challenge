@@ -1,4 +1,4 @@
-import { Account, CreateAccountData } from '@/core/entities/account.entity';
+import { Account, CreateAccountData } from '@/domain/entities/account.entity';
 
 describe('Account Entity', () => {
   describe('CreateAccountData type', () => {

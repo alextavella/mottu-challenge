@@ -1,8 +1,8 @@
-import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
-import { BusinessRuleViolationError } from '@/core/errors/account.errors';
-import { ServerError } from '@/core/errors/server.error';
 import { CreateAccountUseCase } from '@/core/usecases/accounts/create-account-usecase';
-import { IEventManager } from '@/infrastructure/events/types';
+import { IAccountRepository } from '@/domain/contracts/repositories/account-repository';
+import { BusinessRuleViolationError } from '@/domain/errors/account.errors';
+import { ServerError } from '@/domain/errors/server.error';
+import { IEventManager } from '@/infra/events/types';
 import { Prisma } from '@prisma/client';
 import {
   createMockAccountData,
@@ -31,12 +31,8 @@ describe('CreateAccountUseCase', () => {
       const accountData = createMockAccountInput();
       const expectedAccount = createMockAccountData();
 
-      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
-        null,
-      );
-      vi.mocked(mockAccountRepository.create).mockResolvedValue(
-        expectedAccount,
-      );
+      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
+      mockAccountRepository.create.mockResolvedValue(expectedAccount);
 
       const result = await createAccountUseCase.execute(accountData);
 
@@ -76,7 +72,7 @@ describe('CreateAccountUseCase', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
+      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(
         existingAccount,
       );
 
@@ -101,12 +97,15 @@ describe('CreateAccountUseCase', () => {
       };
 
       const repositoryError = new Error('Database connection failed');
-      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockRejectedValue(
+      mockAccountRepository.findByDocumentOrEmail.mockRejectedValue(
         repositoryError,
       );
 
       await expect(createAccountUseCase.execute(accountData)).rejects.toThrow(
-        new ServerError('Failed to create account', repositoryError),
+        new ServerError(
+          'Failed to find account by document or email',
+          repositoryError,
+        ),
       );
 
       expect(mockAccountRepository.findByDocumentOrEmail).toHaveBeenCalledWith(
@@ -124,10 +123,8 @@ describe('CreateAccountUseCase', () => {
       };
 
       const createError = new Error('Failed to insert record');
-      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
-        null,
-      );
-      vi.mocked(mockAccountRepository.create).mockRejectedValue(createError);
+      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
+      mockAccountRepository.create.mockRejectedValue(createError);
 
       await expect(createAccountUseCase.execute(accountData)).rejects.toThrow(
         new ServerError('Failed to create account', createError),
@@ -152,10 +149,8 @@ describe('CreateAccountUseCase', () => {
       };
 
       // Assuming the use case validates empty documents
-      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
-        null,
-      );
-      vi.mocked(mockAccountRepository.create).mockResolvedValue({
+      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
+      mockAccountRepository.create.mockResolvedValue({
         id: 'account-id-123',
         name: 'John Doe',
         document: '',
@@ -178,12 +173,8 @@ describe('CreateAccountUseCase', () => {
       const accountData = createMockAccountInput();
       const expectedAccount = createMockAccountData();
 
-      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
-        null,
-      );
-      vi.mocked(mockAccountRepository.create).mockResolvedValue(
-        expectedAccount,
-      );
+      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
+      mockAccountRepository.create.mockResolvedValue(expectedAccount);
 
       // Mock event manager to fail
       vi.mocked(mockEventManager.publish).mockRejectedValue(
