@@ -1,4 +1,8 @@
-import { setupEventConsumers } from '@/core/handlers';
+import {
+  ALL_DLQ_QUEUES,
+  ALL_QUEUES,
+  setupEventConsumers,
+} from '@/core/handlers';
 import { createServer } from '@/http/server';
 import { prisma } from '@/infra/database/client';
 import {
@@ -26,10 +30,21 @@ async function clearRabbitMQQueues(): Promise<void> {
       return;
     }
 
-    // Clear the test queues
-    const queues = ['ledger.all.movements', 'ledger.movement.created'];
+    // First, try to delete queues (this will remove any configuration conflicts)
+    for (const queue of [...ALL_QUEUES, ...ALL_DLQ_QUEUES]) {
+      try {
+        await execAsync(
+          `docker exec ${containerId.trim()} rabbitmqctl delete_queue ${queue}`,
+        );
+        console.log(`Deleted queue: ${queue}`);
+      } catch (error) {
+        // Queue might not exist, which is fine
+        console.log(`Queue ${queue} not found or already deleted`);
+      }
+    }
 
-    for (const queue of queues) {
+    // Also clear any remaining messages in case queues couldn't be deleted
+    for (const queue of ALL_QUEUES) {
       try {
         await execAsync(
           `docker exec ${containerId.trim()} rabbitmqctl purge_queue ${queue}`,
