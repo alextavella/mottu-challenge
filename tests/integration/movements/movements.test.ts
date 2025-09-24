@@ -1,9 +1,13 @@
-import { createServer } from '@/http/server';
 import { prisma } from '@/infra/database/client';
-import { Prisma } from '@prisma/client';
+import { MovementType, Prisma } from '@prisma/client';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import { cleanupTestDatabase } from 'tests/helpers/database-test-helper';
+import { waitForEventProcessing } from 'tests/helpers/event-test-helper';
+import {
+  closeServerWithEvents,
+  createServerWithEvents,
+} from 'tests/helpers/server-test-helper';
 import {
   ValidationMessages,
   expectFieldError,
@@ -15,13 +19,11 @@ describe('Movement Routes', () => {
   let testAccountId: string;
 
   beforeAll(async () => {
-    app = createServer();
-    await app.ready();
+    app = await createServerWithEvents();
   });
 
   afterAll(async () => {
-    await app.close();
-    await prisma.$disconnect();
+    await closeServerWithEvents(app);
   });
 
   beforeEach(async () => {
@@ -45,7 +47,7 @@ describe('Movement Routes', () => {
       const movementData = {
         accountId: testAccountId,
         amount: 500,
-        type: 'CREDIT',
+        type: MovementType.CREDIT,
         description: 'Salary deposit',
       };
 
@@ -58,6 +60,9 @@ describe('Movement Routes', () => {
         movementId: expect.any(String),
       });
 
+      // Wait for movement to be processed by event handlers
+      await waitForEventProcessing();
+
       // Verify movement was created in database
       const createdMovement = await prisma.movement.findUnique({
         where: { id: response.body.movementId },
@@ -65,6 +70,7 @@ describe('Movement Routes', () => {
 
       expect(createdMovement).toBeTruthy();
       expect(createdMovement?.amount.toNumber()).toBe(500);
+      expect(createdMovement?.status).toBe('COMPLETED');
 
       // Verify account balance was updated
       const updatedAccount = await prisma.account.findUnique({
@@ -78,7 +84,7 @@ describe('Movement Routes', () => {
       const movementData = {
         accountId: testAccountId,
         amount: 300,
-        type: 'DEBIT',
+        type: MovementType.DEBIT,
         description: 'ATM withdrawal',
       };
 
@@ -90,6 +96,18 @@ describe('Movement Routes', () => {
       expect(response.body).toMatchObject({
         movementId: expect.any(String),
       });
+
+      // Wait for movement to be processed by event handlers
+      await waitForEventProcessing();
+
+      // Verify movement was created in database
+      const createdMovement = await prisma.movement.findUnique({
+        where: { id: response.body.movementId },
+      });
+
+      expect(createdMovement).toBeTruthy();
+      expect(createdMovement?.amount.toNumber()).toBe(300);
+      expect(createdMovement?.status).toBe('COMPLETED');
 
       // Verify account balance was updated
       const updatedAccount = await prisma.account.findUnique({
@@ -149,7 +167,7 @@ describe('Movement Routes', () => {
       const movementData = {
         accountId: '550e8400-e29b-41d4-a716-446655440000', // Valid UUID but non-existent
         amount: 100,
-        type: 'CREDIT',
+        type: MovementType.CREDIT,
         description: 'Test movement',
       };
 
@@ -166,7 +184,7 @@ describe('Movement Routes', () => {
       const movementData = {
         accountId: testAccountId,
         amount: 2000, // More than the 1000 balance
-        type: 'DEBIT',
+        type: MovementType.DEBIT,
         description: 'Large withdrawal',
       };
 
@@ -183,7 +201,7 @@ describe('Movement Routes', () => {
       const movementData = {
         accountId: testAccountId,
         amount: 0,
-        type: 'CREDIT',
+        type: MovementType.CREDIT,
         description: 'Zero amount test',
       };
 
@@ -208,7 +226,7 @@ describe('Movement Routes', () => {
       const movementData = {
         accountId: testAccountId,
         amount: 123.45,
-        type: 'CREDIT',
+        type: MovementType.CREDIT,
         description: 'Decimal amount test',
       };
 
@@ -221,19 +239,23 @@ describe('Movement Routes', () => {
         movementId: expect.any(String),
       });
 
+      // Wait for movement to be processed by event handlers
+      await waitForEventProcessing();
+
       // Verify precision in database
       const createdMovement = await prisma.movement.findUnique({
         where: { id: response.body.movementId },
       });
 
       expect(createdMovement?.amount.toNumber()).toBe(123.45);
+      expect(createdMovement?.status).toBe('COMPLETED');
     });
 
     it('should handle negative amounts by rejecting them', async () => {
       const movementData = {
         accountId: testAccountId,
         amount: -100,
-        type: 'CREDIT',
+        type: MovementType.CREDIT,
         description: 'Negative amount test',
       };
 
@@ -284,7 +306,7 @@ describe('Movement Routes', () => {
       const response1 = await supertest(app.server).post('/v1/movements').send({
         accountId: testAccountId,
         amount: 100,
-        type: 'CREDIT',
+        type: MovementType.CREDIT,
         description: 'Sequential movement 1',
       });
 
@@ -293,18 +315,21 @@ describe('Movement Routes', () => {
       const response2 = await supertest(app.server).post('/v1/movements').send({
         accountId: testAccountId,
         amount: 50,
-        type: 'DEBIT',
+        type: MovementType.DEBIT,
         description: 'Sequential movement 2',
       });
 
       expect(response2.status).toBe(201);
 
-      // Verify final balance: 1000 + 100 - 50 = 1050
-      const finalAccount = await prisma.account.findUnique({
-        where: { id: testAccountId },
-      });
+      // Wait for both movements to be processed by event handlers
+      await waitForEventProcessing();
 
-      expect(finalAccount?.balance.toNumber()).toBe(1050);
+      // Verify final balance: 1000 + 100 - 50 = 1050
+      const response3 = await supertest(app.server)
+        .get(`/v1/accounts/${testAccountId}/balance`)
+        .expect(200);
+
+      expect(response3.body.balance).toBe(1050);
     });
 
     it('should respond within reasonable time', async () => {
@@ -313,7 +338,7 @@ describe('Movement Routes', () => {
       const response = await supertest(app.server).post('/v1/movements').send({
         accountId: testAccountId,
         amount: 25,
-        type: 'CREDIT',
+        type: MovementType.CREDIT,
         description: 'Performance test movement',
       });
 
@@ -322,6 +347,9 @@ describe('Movement Routes', () => {
 
       expect(response.status).toBe(201);
       expect(responseTime).toBeLessThan(5000); // Should respond within 5 seconds
+
+      // Wait for movement to be processed by event handlers
+      await waitForEventProcessing();
     });
   });
 
@@ -338,7 +366,11 @@ describe('Movement Routes', () => {
     it('should return specific validation errors for invalid UUID', async () => {
       const response = await supertest(app.server)
         .post('/v1/movements')
-        .send({ accountId: 'not-a-uuid', amount: 100, type: 'CREDIT' })
+        .send({
+          accountId: 'not-a-uuid',
+          amount: 100,
+          type: MovementType.CREDIT,
+        })
         .expect(400);
 
       expectFieldError(response, 'accountId', ValidationMessages.INVALID_UUID);
@@ -347,7 +379,11 @@ describe('Movement Routes', () => {
     it('should return specific validation errors for invalid amount', async () => {
       const response = await supertest(app.server)
         .post('/v1/movements')
-        .send({ accountId: testAccountId, amount: 0, type: 'CREDIT' })
+        .send({
+          accountId: testAccountId,
+          amount: 0,
+          type: MovementType.CREDIT,
+        })
         .expect(400);
 
       expectFieldError(response, 'amount', ValidationMessages.POSITIVE_AMOUNT);

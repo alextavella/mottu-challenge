@@ -1,19 +1,21 @@
-import { createServer } from '@/http/server';
 import { prisma } from '@/infra/database/client';
 import { getEventManager } from '@/infra/events/event-manager';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
+import {
+  closeServerWithEvents,
+  createServerWithEvents,
+} from 'tests/helpers/server-test-helper';
 
 describe('Health Check Routes', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = createServer();
-    await app.ready();
+    app = await createServerWithEvents();
   });
 
   afterAll(async () => {
-    await app.close();
+    await closeServerWithEvents(app);
   });
 
   describe('GET /health', () => {
@@ -68,7 +70,7 @@ describe('Health Check Routes', () => {
       const response = await supertest(app.server).get('/health');
 
       expect(response.status).toBe(503);
-      expect(response.body.status).toBe('unhealthy');
+      expect(response.body.status).toBe('degraded');
       expect(response.body.services.database.status).toBe('unhealthy');
       expect(response.body.services.database.message).toBe(
         'Database connection failed',

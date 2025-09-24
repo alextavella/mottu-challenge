@@ -1,8 +1,13 @@
-import { createServer } from '@/http/server';
 import { prisma } from '@/infra/database/client';
+import { MovementType } from '@prisma/client';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import { cleanupTestDatabase } from 'tests/helpers/database-test-helper';
+import { waitForEventProcessing } from 'tests/helpers/event-test-helper';
+import {
+  closeServerWithEvents,
+  createServerWithEvents,
+} from 'tests/helpers/server-test-helper';
 import {
   ValidationMessages,
   expectFieldError,
@@ -13,13 +18,11 @@ describe('Account Routes', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = createServer();
-    await app.ready();
+    app = await createServerWithEvents();
   });
 
   afterAll(async () => {
-    await app.close();
-    await prisma.$disconnect();
+    await closeServerWithEvents(app);
   });
 
   beforeEach(async () => {
@@ -223,25 +226,31 @@ describe('Account Routes', () => {
       const accountId = createResponse.body.accountId;
 
       // Add some movements using API to ensure proper balance updates
-      await supertest(app.server)
+      const creditResponse = await supertest(app.server)
         .post('/v1/movements')
         .send({
           accountId,
           amount: 500,
-          type: 'CREDIT',
+          type: MovementType.CREDIT,
           description: 'Initial deposit',
         })
         .expect(201);
 
-      await supertest(app.server)
+      // Wait for credit to be processed before creating debit
+      await waitForEventProcessing();
+
+      const debitResponse = await supertest(app.server)
         .post('/v1/movements')
         .send({
           accountId,
           amount: 250,
-          type: 'DEBIT',
+          type: MovementType.DEBIT,
           description: 'Withdrawal',
         })
         .expect(201);
+
+      // Wait for both movements to be processed by event handlers
+      await waitForEventProcessing();
 
       // Get balance
       const response = await supertest(app.server)
