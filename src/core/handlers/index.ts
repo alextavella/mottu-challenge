@@ -10,6 +10,16 @@ import { CompleteMovementUseCase } from '../usecases/movements/complete-movement
 import { LedgerLogHandler } from './ledger-handler';
 import { MovementCreatedHandler } from './movement-handler';
 
+export enum QUEUES {
+  ALL_MOVEMENTS = 'ledger.all.movements',
+  MOVEMENT_CREATED = 'ledger.movement.created',
+}
+
+export const ALL_QUEUES = Object.values(QUEUES);
+export const ALL_DLQ_QUEUES = Object.values(QUEUES).map(
+  (queue) => `${queue}.dlq`,
+);
+
 export async function setupEventConsumers(eventManager: IEventManager) {
   // Get account repository
   const accountRepository = getAccountRepository();
@@ -33,7 +43,7 @@ export async function setupEventConsumers(eventManager: IEventManager) {
 
   // Subscribe to all movement events (using wildcard routing)
   await eventManager.subscribe(MovementEventType.ALL, ledgerHandler, {
-    queue: 'ledger.all.movements',
+    queue: QUEUES.ALL_MOVEMENTS,
     routingKey: MovementEventType.ALL,
   });
 
@@ -42,7 +52,7 @@ export async function setupEventConsumers(eventManager: IEventManager) {
     MovementEventType.CREATED,
     movementCreatedHandler,
     {
-      queue: 'ledger.movement.created',
+      queue: QUEUES.MOVEMENT_CREATED,
       routingKey: MovementEventType.CREATED,
     },
   );
