@@ -44,14 +44,30 @@ src/
 ```
 tests/
 ├── unit/                    # Testes unitários (isolados)
-│   └── core/               # Core (entities, errors, handlers, usecases)
+│   ├── core/               # Core (entities, errors, handlers, usecases)
+│   │   ├── entities/       # Entidades de domínio
+│   │   ├── errors/         # Erros de domínio
+│   │   ├── events/         # Eventos de domínio
+│   │   ├── handlers/       # Handlers de eventos
+│   │   ├── repositories/   # Repositórios
+│   │   └── usecases/       # Casos de uso
+│   ├── domain/             # Testes de domínio
+│   │   ├── entities/       # Entidades
+│   │   └── errors/         # Erros por contexto
+│   ├── http/               # Testes HTTP
+│   │   └── middlewares/    # Middlewares
+│   └── infrastructure/     # Testes de infraestrutura
+│       └── events/         # Sistema de eventos
 ├── integration/             # Testes de integração (E2E)
 │   └── adapters/           # Controllers por feature
-├── mocks/                   # Mocks por camada
-│   ├── core/               # Mocks do core
-│   └── infrastructure/     # Mocks da infraestrutura
+│       ├── accounts/       # Testes de contas
+│       ├── movements/      # Testes de movimentações
+│       └── health/         # Testes de health check
 ├── helpers/                 # Utilitários de teste
-└── http/                    # Arquivos de teste HTTP
+│   ├── database-test-helper.ts
+│   ├── event-test-helper.ts
+│   └── server-test-helper.ts
+└── setup.ts                # Configuração global dos testes
 ```
 
 ## 🎯 Regras Fundamentais
@@ -141,7 +157,7 @@ pnpm docker:down        # Parar containers
 - Clean Architecture + SOLID
 - Estrutura organizada por features
 - Erros de domínio por contexto
-- Testes unitários e integração (91 testes)
+- Testes unitários e integração (170+ testes)
 - Sistema de eventos (RabbitMQ)
 - Documentação Swagger
 - Docker + Docker Compose
