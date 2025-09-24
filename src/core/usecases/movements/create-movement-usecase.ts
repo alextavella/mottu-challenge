@@ -60,9 +60,7 @@ export class CreateMovementUseCase implements ICreateMovementUseCase {
       movement,
     );
 
-    await this.eventManager
-      .publish(event)
-      .catch(throwServerError('Failed to publish movement event:'));
+    this.eventManager.publish(event);
 
     return {
       movementId: movement.id,

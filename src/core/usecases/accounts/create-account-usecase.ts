@@ -47,9 +47,7 @@ export class CreateAccountUseCase implements IUseCase<Input, Output> {
       account,
     );
 
-    await this.eventManager
-      .publish(event)
-      .catch(throwServerError('Failed to publish account event:'));
+    this.eventManager.publish(event);
 
     return {
       accountId: account.id,

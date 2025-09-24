@@ -7,7 +7,6 @@ import {
   MovementStatus,
 } from '@/domain/entities/movement.entity';
 import { MovementNotFoundError } from '@/domain/errors/movement.errors';
-import { throwServerError } from '@/domain/errors/server.error';
 import { IEventManager } from '@/infra/events/types';
 
 type Input = MovementData;
@@ -46,9 +45,7 @@ export class CancelMovementUseCase implements ICancelMovementUseCase {
       updatedMovement,
     );
 
-    this.eventManager
-      .publish(movementEvent)
-      .catch(throwServerError('Failed to publish movement event:'));
+    this.eventManager.publish(movementEvent);
 
     return {
       movementId: movement.id,

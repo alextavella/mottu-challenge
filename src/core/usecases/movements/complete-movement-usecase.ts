@@ -8,7 +8,6 @@ import { IUseCase } from '@/domain/contracts/usecases/interfaces';
 import { UpdateAccountBalance } from '@/domain/entities/account-balance.entity';
 import { AccountNotFoundError } from '@/domain/errors/account.errors';
 import { MovementNotFoundError } from '@/domain/errors/movement.errors';
-import { throwServerError } from '@/domain/errors/server.error';
 import { IEventManager } from '@/infra/events/types';
 import { MovementStatus } from '@prisma/client';
 
@@ -79,9 +78,7 @@ export class CompleteMovementUseCase implements ICompleteMovementUseCase {
       updatedMovement,
     );
 
-    this.eventManager
-      .publishBatch([accountEvent, movementEvent])
-      .catch(throwServerError('Failed to publish account event:'));
+    this.eventManager.publishBatch([accountEvent, movementEvent]);
 
     return {
       movementId: updatedMovement.id,
