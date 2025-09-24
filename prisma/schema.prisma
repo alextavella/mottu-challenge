@@ -29,6 +29,11 @@ enum MovementType {
   CREDIT
   DEBIT
 }
+enum MovementStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
 
 model Movement {
   id          String       @id @default(uuid())
@@ -36,6 +41,7 @@ model Movement {
   amount      Decimal      @db.Decimal(15, 2)
   type        MovementType
   description String?
+  status      MovementStatus @default(PENDING)
   createdAt   DateTime     @default(now())
 
   // Relations

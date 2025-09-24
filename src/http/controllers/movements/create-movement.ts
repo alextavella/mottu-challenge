@@ -35,8 +35,8 @@ export async function createMovement(fastify: FastifyInstance) {
       const eventManager = getEventManager();
 
       const createMovementUseCase = new CreateMovementUseCase(
-        movementRepository,
         accountRepository,
+        movementRepository,
         eventManager,
       );
 

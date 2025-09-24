@@ -18,8 +18,8 @@ export type ICreateMovementUseCase = IUseCase<Input, Output>;
 
 export class CreateMovementUseCase implements ICreateMovementUseCase {
   constructor(
-    private readonly movementRepository: IMovementRepository,
     private readonly accountRepository: IAccountRepository,
+    private readonly movementRepository: IMovementRepository,
     private readonly eventManager: IEventManager,
   ) {}
 

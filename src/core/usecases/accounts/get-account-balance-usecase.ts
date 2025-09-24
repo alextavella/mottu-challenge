@@ -28,7 +28,7 @@ export class GetAccountBalanceUseCase implements IUseCase<Input, Output> {
     return {
       accountId: account.id,
       name: account.name,
-      balance: account.balance,
+      balance: Number(account.balance),
     };
   }
 }

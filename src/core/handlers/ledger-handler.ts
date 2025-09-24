@@ -21,7 +21,16 @@ export class LedgerLogHandler implements IEventHandler<MovementEvent> {
   async handle(event: MovementEvent): Promise<void> {
     console.log(`Processing ledger log for movement: ${event.data.id}`);
 
-    const result = ledgerLogSchema.safeParse(event.data);
+    const ledgerData = {
+      id: event.id,
+      movementId: event.data.id,
+      accountId: event.data.accountId,
+      type: event.data.type,
+      amount: Number(event.data.amount),
+      data: event.data,
+    };
+
+    const result = ledgerLogSchema.safeParse(ledgerData);
 
     if (!result.success) {
       throw new ServerError(
