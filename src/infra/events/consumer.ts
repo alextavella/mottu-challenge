@@ -32,7 +32,7 @@ export class RabbitMQEventConsumer {
       queue: options.queue || `${eventType}.queue`,
       exchange: options.exchange || this.exchangeName,
       routingKey: options.routingKey || eventType,
-      prefetch: options.prefetch || 1,
+      prefetch: options.prefetch || 10,
       retryAttempts: options.retryAttempts || 3,
       retryDelay: options.retryDelay || 1000,
       deadLetterExchange:
@@ -58,7 +58,7 @@ export class RabbitMQEventConsumer {
     this.channel = await this.connection.createChannel('consumer');
 
     // Set prefetch for the channel (will be overridden per consumer if needed)
-    await this.channel.prefetch(1);
+    await this.channel.prefetch(10);
 
     // Declare main exchange
     await this.channel.assertExchange(this.exchangeName, 'topic', {

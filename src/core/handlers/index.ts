@@ -54,6 +54,7 @@ export async function setupEventConsumers(eventManager: IEventManager) {
     {
       queue: QUEUES.MOVEMENT_CREATED,
       routingKey: MovementEventType.CREATED,
+      prefetch: 1, // Only one message per consumer
     },
   );
 
