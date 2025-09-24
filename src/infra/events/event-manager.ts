@@ -1,4 +1,5 @@
 import { env } from '../config/env.config';
+import { ILogger } from '../config/logger';
 import { RabbitMQConnection } from './connection';
 import { RabbitMQEventConsumer } from './consumer';
 import { RabbitMQEventPublisher } from './publisher';
@@ -17,11 +18,22 @@ export class EventManager implements IEventManager {
   private consumer: RabbitMQEventConsumer;
   private isInitialized = false;
 
-  constructor(private options: EventManagerOptions) {
+  constructor(
+    private logger: ILogger,
+    private options: EventManagerOptions,
+  ) {
     this.connection = new RabbitMQConnection(options.connection);
     const exchangeName = options.defaultExchange || 'events';
-    this.publisher = new RabbitMQEventPublisher(this.connection, exchangeName);
-    this.consumer = new RabbitMQEventConsumer(this.connection, exchangeName);
+    this.publisher = new RabbitMQEventPublisher(
+      this.logger,
+      this.connection,
+      exchangeName,
+    );
+    this.consumer = new RabbitMQEventConsumer(
+      this.logger,
+      this.connection,
+      exchangeName,
+    );
   }
 
   async initialize(): Promise<void> {
@@ -29,10 +41,10 @@ export class EventManager implements IEventManager {
 
     try {
       await this.connection.connect();
-      console.log('Event Manager initialized successfully');
+      this.logger.info('Event Manager initialized successfully');
       this.isInitialized = true;
     } catch (error) {
-      console.error('Failed to initialize Event Manager:', error);
+      this.logger.error('Failed to initialize Event Manager:', error);
       throw error;
     }
   }
@@ -89,7 +101,7 @@ export class EventManager implements IEventManager {
   }
 
   async shutdown(): Promise<void> {
-    console.log('Shutting down Event Manager...');
+    this.logger.info('Shutting down Event Manager...');
 
     try {
       await this.consumer.stop();
@@ -97,9 +109,9 @@ export class EventManager implements IEventManager {
       await this.connection.close();
 
       this.isInitialized = false;
-      console.log('Event Manager shutdown completed');
+      this.logger.info('Event Manager shutdown completed');
     } catch (error) {
-      console.error('Error during Event Manager shutdown:', error);
+      this.logger.error('Error during Event Manager shutdown:', error);
     }
   }
 
@@ -127,9 +139,12 @@ function createEventManagerOptions(): EventManagerOptions {
 // Singleton instance
 let eventManagerInstance: EventManager | null = null;
 
-export function getEventManager(): EventManager {
+export function getEventManager(logger: ILogger): EventManager {
   if (!eventManagerInstance) {
-    eventManagerInstance = new EventManager(createEventManagerOptions());
+    eventManagerInstance = new EventManager(
+      logger,
+      createEventManagerOptions(),
+    );
   }
   return eventManagerInstance;
 }

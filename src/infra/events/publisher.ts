@@ -1,4 +1,5 @@
 import { Channel } from 'amqplib';
+import { ILogger } from '../config/logger';
 import { RabbitMQConnection } from './connection';
 import { BaseEvent, IEventPublisher } from './types';
 
@@ -7,6 +8,7 @@ export class RabbitMQEventPublisher implements IEventPublisher {
   private readonly exchangeName: string;
 
   constructor(
+    private logger: ILogger,
     private connection: RabbitMQConnection,
     exchangeName = 'events',
   ) {
@@ -59,9 +61,9 @@ export class RabbitMQEventPublisher implements IEventPublisher {
         throw new Error('Failed to publish event: channel buffer full');
       }
 
-      console.log(`Event published: ${event.type} with ID ${event.id}`);
+      this.logger.info(`Event published: ${event.type} with ID ${event.id}`);
     } catch (error) {
-      console.error(`Failed to publish event ${event.id}:`, error);
+      this.logger.error(`Failed to publish event ${event.id}:`, error);
       throw error;
     }
   }
@@ -106,9 +108,9 @@ export class RabbitMQEventPublisher implements IEventPublisher {
         }
       }
 
-      console.log(`Batch published: ${events.length} events`);
+      this.logger.info(`Batch published: ${events.length} events`);
     } catch (error) {
-      console.error(
+      this.logger.error(
         `Failed to publish batch of ${events.length} events:`,
         error,
       );
@@ -128,7 +130,7 @@ export class RabbitMQEventPublisher implements IEventPublisher {
       try {
         await this.channel.close();
       } catch (error) {
-        console.error('Error closing publisher channel:', error);
+        this.logger.error('Error closing publisher channel:', error);
       }
       this.channel = null;
     }

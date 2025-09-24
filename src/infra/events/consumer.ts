@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Channel, ConsumeMessage } from 'amqplib';
+import { ILogger } from '../config/logger';
 import { RabbitMQConnection } from './connection';
 import { BaseEvent, ConsumerOptions, IEventHandler } from './types';
 
@@ -17,6 +18,7 @@ export class RabbitMQEventConsumer {
   private isStarted = false;
 
   constructor(
+    private logger: ILogger,
     private connection: RabbitMQConnection,
     private readonly exchangeName: string,
   ) {}
@@ -47,7 +49,7 @@ export class RabbitMQEventConsumer {
       await this.startConsumer(eventType, this.consumers.get(eventType)!);
     }
 
-    console.log(`Subscribed to event type: ${eventType}`);
+    this.logger.info(`Subscribed to event type: ${eventType}`);
   }
 
   async start(): Promise<void> {
@@ -74,7 +76,7 @@ export class RabbitMQEventConsumer {
     }
 
     this.isStarted = true;
-    console.log('Event consumer started');
+    this.logger.info('Event consumer started');
   }
 
   private async startConsumer(
@@ -133,7 +135,9 @@ export class RabbitMQEventConsumer {
     );
 
     consumer.consumerTag = consumerTag;
-    console.log(`Started consumer for ${eventType} on queue ${options.queue}`);
+    this.logger.info(
+      `Started consumer for ${eventType} on queue ${options.queue}`,
+    );
   }
 
   private async handleMessage<T extends BaseEvent>(
@@ -156,9 +160,9 @@ export class RabbitMQEventConsumer {
         timestamp: new Date(parsedEvent.timestamp),
       } as T;
 
-      console.log(`Processing event: ${event.type} with ID ${event.id}`);
+      this.logger.info(`Processing event: ${event.type} with ID ${event.id}`);
     } catch (error) {
-      console.error('Failed to parse event message:', error);
+      this.logger.error('Failed to parse event message:', error);
       this.channel.nack(msg, false, false); // Reject and don't requeue
       return;
     }
@@ -168,15 +172,15 @@ export class RabbitMQEventConsumer {
     try {
       await handler.handle(event);
       this.channel.ack(msg);
-      console.log(
+      this.logger.info(
         `Successfully processed event: ${event.type} with ID ${event.id}`,
       );
     } catch (error) {
-      console.error(`Failed to process event ${event.id}:`, error);
+      this.logger.error(`Failed to process event ${event.id}:`, error);
 
       if (retryCount < options.retryAttempts) {
         // Retry with delay
-        console.log(
+        this.logger.info(
           `Retrying event ${event.id} (attempt ${retryCount + 1}/${options.retryAttempts})`,
         );
 
@@ -190,7 +194,7 @@ export class RabbitMQEventConsumer {
         ); // Exponential backoff
       } else {
         // Max retries reached, send to dead letter queue
-        console.error(
+        this.logger.error(
           `Max retries reached for event ${event.id}, sending to DLQ`,
         );
         this.channel.nack(msg, false, false); // Don't requeue, will go to DLQ
@@ -214,9 +218,9 @@ export class RabbitMQEventConsumer {
       if (consumer.consumerTag && this.channel) {
         try {
           await this.channel.cancel(consumer.consumerTag);
-          console.log(`Stopped consumer for ${consumer.eventType}`);
+          this.logger.info(`Stopped consumer for ${consumer.eventType}`);
         } catch (error) {
-          console.error(
+          this.logger.error(
             `Error stopping consumer for ${consumer.eventType}:`,
             error,
           );
@@ -229,12 +233,12 @@ export class RabbitMQEventConsumer {
       try {
         await this.channel.close();
       } catch (error) {
-        console.error('Error closing consumer channel:', error);
+        this.logger.error('Error closing consumer channel:', error);
       }
       this.channel = null;
     }
 
     this.isStarted = false;
-    console.log('Event consumer stopped');
+    this.logger.info('Event consumer stopped');
   }
 }
