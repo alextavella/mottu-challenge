@@ -1,5 +1,5 @@
-import { BaseEvent } from '@/infrastructure/events/types';
-import { Account } from '@prisma/client';
+import { BaseEvent } from '@/infra/events/types';
+import { AccountData } from '../../domain/entities/account.entity';
 
 export enum AccountEventType {
   ALL = 'account.*',
@@ -9,12 +9,12 @@ export enum AccountEventType {
 }
 
 export type AccountEvent = BaseEvent<AccountEventType> & {
-  data: Account;
+  data: AccountData;
 };
 
 export function createAccountEvent(
   type: AccountEventType,
-  data: Account,
+  data: AccountData,
   correlationId?: string,
 ): AccountEvent {
   return {

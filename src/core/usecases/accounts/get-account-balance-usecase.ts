@@ -1,7 +1,6 @@
-import { IAccountRepository } from '@/core/contracts/repositories/account-repository';
-import { AccountNotFoundError } from '@/core/errors/account.errors';
-import { ServerError } from '@/core/errors/server.error';
-import { IUseCase } from '../../contracts/usecases/interfaces';
+import { IAccountRepository } from '@/domain/contracts/repositories/account-repository';
+import { IUseCase } from '@/domain/contracts/usecases/interfaces';
+import { AccountNotFoundError } from '@/domain/errors/account.errors';
 
 type Input = {
   accountId: string;
@@ -18,23 +17,18 @@ export class GetAccountBalanceUseCase implements IUseCase<Input, Output> {
   async execute(input: Input): Promise<Output> {
     const { accountId } = input;
 
-    try {
-      const account = await this.accountRepository.findById(accountId);
+    const account = await this.accountRepository
+      .findById(accountId)
+      .catch(() => null);
 
-      if (!account) {
-        throw new AccountNotFoundError(accountId);
-      }
-
-      return {
-        accountId: account.id,
-        name: account.name,
-        balance: account.balance.toNumber(),
-      };
-    } catch (error) {
-      if (error instanceof AccountNotFoundError) {
-        throw error;
-      }
-      throw new ServerError('Failed to get account balance', error as Error);
+    if (!account) {
+      throw new AccountNotFoundError(accountId);
     }
+
+    return {
+      accountId: account.id,
+      name: account.name,
+      balance: account.balance,
+    };
   }
 }

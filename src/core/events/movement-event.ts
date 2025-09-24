@@ -1,5 +1,5 @@
-import { BaseEvent } from '@/infrastructure/events/types';
-import { Movement } from '@prisma/client';
+import { BaseEvent } from '@/infra/events/types';
+import { MovementData } from '../../domain/entities/movement.entity';
 
 export enum MovementEventType {
   ALL = 'movement.*',
@@ -9,12 +9,12 @@ export enum MovementEventType {
 }
 
 export type MovementEvent = BaseEvent<MovementEventType> & {
-  data: Movement;
+  data: MovementData;
 };
 
 export function createMovementEvent(
   type: MovementEventType,
-  data: Movement,
+  data: MovementData,
   correlationId?: string,
 ): MovementEvent {
   return {
