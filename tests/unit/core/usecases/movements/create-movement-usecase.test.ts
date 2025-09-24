@@ -3,27 +3,27 @@ import { IAccountRepository } from '@/domain/contracts/repositories/account-repo
 import { IMovementRepository } from '@/domain/contracts/repositories/movement-repository';
 import { AccountNotFoundError } from '@/domain/errors/account.errors';
 import { InsufficientFundsError } from '@/domain/errors/movement.errors';
-import { ServerError } from '@/domain/errors/server.error';
 import { IEventManager } from '@/infra/events/types';
-import { Prisma } from '@prisma/client';
+import { MovementStatus, MovementType } from '@prisma/client';
 import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
 import { createMovementRepositoryMock } from 'tests/mocks/core/repositories/movement-repository.mock';
 import { createEventManagerMock } from 'tests/mocks/infrastructure/events/event-system.mock';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('CreateMovementUseCase', () => {
   let createMovementUseCase: CreateMovementUseCase;
-  let mockMovementRepository: IMovementRepository;
   let mockAccountRepository: IAccountRepository;
+  let mockMovementRepository: IMovementRepository;
   let mockEventManager: IEventManager;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMovementRepository = createMovementRepositoryMock();
     mockAccountRepository = createAccountRepositoryMock();
+    mockMovementRepository = createMovementRepositoryMock();
     mockEventManager = createEventManagerMock();
     createMovementUseCase = new CreateMovementUseCase(
-      mockMovementRepository,
       mockAccountRepository,
+      mockMovementRepository,
       mockEventManager,
     );
   });
@@ -33,7 +33,7 @@ describe('CreateMovementUseCase', () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 100,
-        type: 'CREDIT' as const,
+        type: MovementType.CREDIT,
         description: 'Salary deposit',
       };
 
@@ -42,7 +42,7 @@ describe('CreateMovementUseCase', () => {
         name: 'John Doe',
         email: 'john@example.com',
         document: '12345678901',
-        balance: new Prisma.Decimal(500),
+        balance: 500,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -50,25 +50,20 @@ describe('CreateMovementUseCase', () => {
       const expectedMovement = {
         id: 'movement-id-123',
         accountId: 'account-id-123',
-        amount: new Prisma.Decimal(100),
-        type: 'CREDIT' as const,
+        amount: 100,
+        type: MovementType.CREDIT,
+        status: MovementStatus.PENDING,
         description: 'Salary deposit',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const newBalance = new Prisma.Decimal(600);
-
-      (mockAccountRepository.findById as any).mockResolvedValue(
+      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
         existingAccount,
       );
-      (mockMovementRepository.create as any).mockResolvedValue(
+      vi.mocked(mockMovementRepository.create).mockResolvedValue(
         expectedMovement,
       );
-      (mockAccountRepository.updateBalance as any).mockResolvedValue({
-        ...existingAccount,
-        balance: newBalance,
-      });
 
       const result = await createMovementUseCase.execute(movementData);
 
@@ -77,9 +72,12 @@ describe('CreateMovementUseCase', () => {
         'account-id-123',
       );
       expect(mockMovementRepository.create).toHaveBeenCalledWith(movementData);
-      expect(mockAccountRepository.updateBalance).toHaveBeenCalledWith(
-        'account-id-123',
-        newBalance,
+      expect(mockEventManager.publish).toHaveBeenCalledTimes(1);
+      expect(mockEventManager.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'movement.created',
+          data: expectedMovement,
+        }),
       );
     });
 
@@ -87,7 +85,7 @@ describe('CreateMovementUseCase', () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 50,
-        type: 'DEBIT' as const,
+        type: MovementType.DEBIT,
         description: 'ATM withdrawal',
       };
 
@@ -96,7 +94,7 @@ describe('CreateMovementUseCase', () => {
         name: 'John Doe',
         email: 'john@example.com',
         document: '12345678901',
-        balance: new Prisma.Decimal(500),
+        balance: 500,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -104,25 +102,20 @@ describe('CreateMovementUseCase', () => {
       const expectedMovement = {
         id: 'movement-id-123',
         accountId: 'account-id-123',
-        amount: new Prisma.Decimal(50),
-        type: 'DEBIT' as const,
+        amount: 50,
+        type: MovementType.DEBIT,
+        status: MovementStatus.PENDING,
         description: 'ATM withdrawal',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const newBalance = new Prisma.Decimal(450);
-
-      (mockAccountRepository.findById as any).mockResolvedValue(
+      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
         existingAccount,
       );
-      (mockMovementRepository.create as any).mockResolvedValue(
+      vi.mocked(mockMovementRepository.create).mockResolvedValue(
         expectedMovement,
       );
-      (mockAccountRepository.updateBalance as any).mockResolvedValue({
-        ...existingAccount,
-        balance: newBalance,
-      });
 
       const result = await createMovementUseCase.execute(movementData);
 
@@ -131,9 +124,12 @@ describe('CreateMovementUseCase', () => {
         'account-id-123',
       );
       expect(mockMovementRepository.create).toHaveBeenCalledWith(movementData);
-      expect(mockAccountRepository.updateBalance).toHaveBeenCalledWith(
-        'account-id-123',
-        newBalance,
+      expect(mockEventManager.publish).toHaveBeenCalledTimes(1);
+      expect(mockEventManager.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'movement.created',
+          data: expectedMovement,
+        }),
       );
     });
 
@@ -141,11 +137,11 @@ describe('CreateMovementUseCase', () => {
       const movementData = {
         accountId: 'non-existent-account',
         amount: 100,
-        type: 'CREDIT' as const,
+        type: MovementType.CREDIT,
         description: 'Test movement',
       };
 
-      (mockAccountRepository.findById as any).mockResolvedValue(null);
+      vi.mocked(mockAccountRepository.findById).mockResolvedValue(null);
 
       await expect(createMovementUseCase.execute(movementData)).rejects.toThrow(
         new AccountNotFoundError('non-existent-account'),
@@ -155,14 +151,14 @@ describe('CreateMovementUseCase', () => {
         'non-existent-account',
       );
       expect(mockMovementRepository.create).not.toHaveBeenCalled();
-      expect(mockAccountRepository.updateBalance).not.toHaveBeenCalled();
+      expect(mockEventManager.publish).not.toHaveBeenCalled();
     });
 
     it('should throw InsufficientFundsError if debit amount exceeds balance', async () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 1000,
-        type: 'DEBIT' as const,
+        type: MovementType.DEBIT,
         description: 'Large withdrawal',
       };
 
@@ -171,12 +167,12 @@ describe('CreateMovementUseCase', () => {
         name: 'John Doe',
         email: 'john@example.com',
         document: '12345678901',
-        balance: new Prisma.Decimal(500),
+        balance: 500,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      (mockAccountRepository.findById as any).mockResolvedValue(
+      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
         existingAccount,
       );
 
@@ -188,19 +184,19 @@ describe('CreateMovementUseCase', () => {
         'account-id-123',
       );
       expect(mockMovementRepository.create).not.toHaveBeenCalled();
-      expect(mockAccountRepository.updateBalance).not.toHaveBeenCalled();
+      expect(mockEventManager.publish).not.toHaveBeenCalled();
     });
 
     it('should throw ServerError if repository throws an error', async () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 100,
-        type: 'CREDIT' as const,
+        type: MovementType.CREDIT,
         description: 'Test movement',
       };
 
       const repositoryError = new Error('Database connection failed');
-      (mockAccountRepository.findById as any).mockRejectedValue(
+      vi.mocked(mockAccountRepository.findById).mockRejectedValue(
         repositoryError,
       );
 
@@ -212,13 +208,14 @@ describe('CreateMovementUseCase', () => {
         'account-id-123',
       );
       expect(mockMovementRepository.create).not.toHaveBeenCalled();
+      expect(mockEventManager.publish).not.toHaveBeenCalled();
     });
 
     it('should reject zero amount movement', async () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 0,
-        type: 'CREDIT' as const,
+        type: MovementType.CREDIT,
         description: 'Zero amount test',
       };
 
@@ -227,12 +224,12 @@ describe('CreateMovementUseCase', () => {
         name: 'John Doe',
         email: 'john@example.com',
         document: '12345678901',
-        balance: new Prisma.Decimal(500),
+        balance: 500,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      (mockAccountRepository.findById as any).mockResolvedValue(
+      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
         existingAccount,
       );
 
@@ -240,16 +237,18 @@ describe('CreateMovementUseCase', () => {
         'Invalid movement amount: 0',
       );
 
-      expect(mockAccountRepository.findById).toHaveBeenCalledWith('account-id-123');
+      expect(mockAccountRepository.findById).toHaveBeenCalledWith(
+        'account-id-123',
+      );
       expect(mockMovementRepository.create).not.toHaveBeenCalled();
-      expect(mockAccountRepository.updateBalance).not.toHaveBeenCalled();
+      expect(mockEventManager.publish).not.toHaveBeenCalled();
     });
 
     it('should handle event publishing failure gracefully', async () => {
       const movementData = {
         accountId: 'account-id-123',
         amount: 100,
-        type: 'CREDIT' as const,
+        type: MovementType.CREDIT,
         description: 'Credit with event failure',
       };
 
@@ -258,7 +257,7 @@ describe('CreateMovementUseCase', () => {
         name: 'John Doe',
         email: 'john@example.com',
         document: '12345678901',
-        balance: new Prisma.Decimal(500),
+        balance: 500,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -266,44 +265,30 @@ describe('CreateMovementUseCase', () => {
       const expectedMovement = {
         id: 'movement-id-123',
         accountId: 'account-id-123',
-        amount: new Prisma.Decimal(100),
-        type: 'CREDIT' as const,
+        amount: 100,
+        type: MovementType.CREDIT,
+        status: MovementStatus.PENDING,
         description: 'Credit with event failure',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      (mockAccountRepository.findById as any).mockResolvedValue(
+      vi.mocked(mockAccountRepository.findById).mockResolvedValue(
         existingAccount,
       );
-      (mockMovementRepository.create as any).mockResolvedValue(
+      vi.mocked(mockMovementRepository.create).mockResolvedValue(
         expectedMovement,
       );
-      (mockAccountRepository.updateBalance as any).mockResolvedValue({
-        ...existingAccount,
-        balance: new Prisma.Decimal(600),
-      });
 
       // Mock event manager to fail
       vi.mocked(mockEventManager.publish).mockRejectedValue(
         new Error('Event publishing failed'),
       );
 
-      // Spy on console.error to verify error logging
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
       const result = await createMovementUseCase.execute(movementData);
 
       expect(result).toEqual({ movementId: 'movement-id-123' });
       expect(mockEventManager.publish).toHaveBeenCalledTimes(1);
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to publish movement event:',
-        expect.any(Error),
-      );
-
-      consoleErrorSpy.mockRestore();
     });
   });
 });

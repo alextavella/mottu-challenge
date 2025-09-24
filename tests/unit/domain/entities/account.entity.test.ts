@@ -1,4 +1,4 @@
-import { Account, CreateAccountData } from '@/domain/entities/account.entity';
+import { CreateAccountData } from '@/domain/entities/account.entity';
 
 describe('Account Entity', () => {
   describe('CreateAccountData type', () => {
@@ -103,18 +103,6 @@ describe('Account Entity', () => {
       expect(data.document).toContain('-');
       expect(data.email).toContain('+');
       expect(data.email).toContain('-');
-    });
-  });
-
-  describe('Account type (from Prisma)', () => {
-    it('should be available as exported type', () => {
-      // This test ensures the Account type is properly exported
-      // The actual structure comes from Prisma, so we just verify the export works
-      const accountTypeCheck = (account: Account) => {
-        return account;
-      };
-
-      expect(typeof accountTypeCheck).toBe('function');
     });
   });
 });

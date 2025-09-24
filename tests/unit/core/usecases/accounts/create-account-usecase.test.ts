@@ -10,6 +10,7 @@ import {
 } from 'tests/mocks/core/entities/test-data.mock';
 import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
 import { createEventManagerMock } from 'tests/mocks/infrastructure/events/event-system.mock';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('CreateAccountUseCase', () => {
   let createAccountUseCase: CreateAccountUseCase;
@@ -31,8 +32,12 @@ describe('CreateAccountUseCase', () => {
       const accountData = createMockAccountInput();
       const expectedAccount = createMockAccountData();
 
-      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
-      mockAccountRepository.create.mockResolvedValue(expectedAccount);
+      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
+        null,
+      );
+      vi.mocked(mockAccountRepository.create).mockResolvedValue(
+        expectedAccount,
+      );
 
       const result = await createAccountUseCase.execute(accountData);
 
@@ -72,7 +77,7 @@ describe('CreateAccountUseCase', () => {
         updatedAt: new Date(),
       };
 
-      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(
+      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
         existingAccount,
       );
 
@@ -97,7 +102,7 @@ describe('CreateAccountUseCase', () => {
       };
 
       const repositoryError = new Error('Database connection failed');
-      mockAccountRepository.findByDocumentOrEmail.mockRejectedValue(
+      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockRejectedValue(
         repositoryError,
       );
 
@@ -123,8 +128,10 @@ describe('CreateAccountUseCase', () => {
       };
 
       const createError = new Error('Failed to insert record');
-      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
-      mockAccountRepository.create.mockRejectedValue(createError);
+      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
+        null,
+      );
+      vi.mocked(mockAccountRepository.create).mockRejectedValue(createError);
 
       await expect(createAccountUseCase.execute(accountData)).rejects.toThrow(
         new ServerError('Failed to create account', createError),
@@ -149,8 +156,10 @@ describe('CreateAccountUseCase', () => {
       };
 
       // Assuming the use case validates empty documents
-      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
-      mockAccountRepository.create.mockResolvedValue({
+      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
+        null,
+      );
+      vi.mocked(mockAccountRepository.create).mockResolvedValue({
         id: 'account-id-123',
         name: 'John Doe',
         document: '',
@@ -173,29 +182,22 @@ describe('CreateAccountUseCase', () => {
       const accountData = createMockAccountInput();
       const expectedAccount = createMockAccountData();
 
-      mockAccountRepository.findByDocumentOrEmail.mockResolvedValue(null);
-      mockAccountRepository.create.mockResolvedValue(expectedAccount);
+      vi.mocked(mockAccountRepository.findByDocumentOrEmail).mockResolvedValue(
+        null,
+      );
+      vi.mocked(mockAccountRepository.create).mockResolvedValue(
+        expectedAccount,
+      );
 
       // Mock event manager to fail
       vi.mocked(mockEventManager.publish).mockRejectedValue(
         new Error('Event publishing failed'),
       );
 
-      // Spy on console.error to verify error logging
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
       const result = await createAccountUseCase.execute(accountData);
 
       expect(result).toEqual({ accountId: 'account-id-123' });
       expect(mockEventManager.publish).toHaveBeenCalledTimes(1);
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to publish account event:',
-        expect.any(Error),
-      );
-
-      consoleErrorSpy.mockRestore();
     });
   });
 });

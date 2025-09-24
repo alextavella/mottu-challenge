@@ -1,26 +1,20 @@
 import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { LedgerLogHandler } from '@/core/handlers/ledger-handler';
-import { prisma } from '@/infra/database/client';
-import { MovementType } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
-
-// Mock the database client
-vi.mock('@/infra/database/client', () => ({
-  prisma: {
-    ledgerLog: {
-      create: vi.fn(),
-    },
-  },
-}));
+import type { ILedgerLogRepository } from '@/domain/contracts/repositories/ledger-log-repository';
+import { MovementStatus, MovementType } from '@prisma/client';
 
 describe('LedgerLogHandler', () => {
   let handler: LedgerLogHandler;
+  let mockRepository: ILedgerLogRepository;
   let mockLedgerLogCreate: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockLedgerLogCreate = vi.mocked(prisma.ledgerLog.create);
-    handler = new LedgerLogHandler();
+    mockRepository = {
+      create: vi.fn(),
+    } as unknown as ILedgerLogRepository;
+    mockLedgerLogCreate = mockRepository.create as unknown as any;
+    handler = new LedgerLogHandler(mockRepository);
   });
 
   describe('handle', () => {
@@ -34,8 +28,9 @@ describe('LedgerLogHandler', () => {
         data: {
           id: '550e8400-e29b-41d4-a716-446655440002',
           accountId: '550e8400-e29b-41d4-a716-446655440003',
-          amount: new Decimal(100.5),
+          amount: 100.5,
           type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
           description: 'Test movement',
           createdAt: new Date('2024-01-01T00:00:00Z'),
         },
@@ -46,13 +41,11 @@ describe('LedgerLogHandler', () => {
       await handler.handle(movementEvent);
 
       expect(mockLedgerLogCreate).toHaveBeenCalledWith({
-        data: {
-          movementId: 'movement-123',
-          accountId: 'account-456',
-          type: MovementEventType.CREATED,
-          amount: new Decimal(100.5),
-          data: JSON.stringify(movementEvent.data),
-        },
+        movementId: '550e8400-e29b-41d4-a716-446655440002',
+        accountId: '550e8400-e29b-41d4-a716-446655440003',
+        type: MovementType.CREDIT,
+        amount: 100.5,
+        data: movementEvent.data || {},
       });
     });
 
@@ -65,8 +58,9 @@ describe('LedgerLogHandler', () => {
         data: {
           id: '550e8400-e29b-41d4-a716-446655440005',
           accountId: '550e8400-e29b-41d4-a716-446655440006',
-          amount: new Decimal(50.25),
+          amount: 50.25,
           type: MovementType.DEBIT,
+          status: MovementStatus.PENDING,
           description: 'Debit test',
           createdAt: new Date('2024-01-01T00:00:00Z'),
         },
@@ -77,13 +71,11 @@ describe('LedgerLogHandler', () => {
       await handler.handle(movementEvent);
 
       expect(mockLedgerLogCreate).toHaveBeenCalledWith({
-        data: {
-          movementId: 'movement-456',
-          accountId: 'account-789',
-          type: MovementEventType.CREATED,
-          amount: new Decimal(50.25),
-          data: JSON.stringify(movementEvent.data),
-        },
+        movementId: '550e8400-e29b-41d4-a716-446655440005',
+        accountId: '550e8400-e29b-41d4-a716-446655440006',
+        type: MovementType.DEBIT,
+        amount: 50.25,
+        data: movementEvent.data || {},
       });
     });
 
@@ -96,8 +88,9 @@ describe('LedgerLogHandler', () => {
         data: {
           id: '550e8400-e29b-41d4-a716-446655440008',
           accountId: '550e8400-e29b-41d4-a716-446655440009',
-          amount: new Decimal(75.0),
+          amount: 75.0,
           type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
           description: 'Failed movement',
           createdAt: new Date('2024-01-01T00:00:00Z'),
         },
@@ -107,7 +100,7 @@ describe('LedgerLogHandler', () => {
       mockLedgerLogCreate.mockRejectedValueOnce(dbError);
 
       await expect(handler.handle(movementEvent)).rejects.toThrow(
-        'Failed to create ledger log for movement movement-789',
+        `Failed to create ledger log for movement 550e8400-e29b-41d4-a716-446655440008`,
       );
     });
 
@@ -120,7 +113,7 @@ describe('LedgerLogHandler', () => {
         data: {
           id: '550e8400-e29b-41d4-a716-446655440011',
           accountId: '550e8400-e29b-41d4-a716-446655440012',
-          amount: new Decimal(123.45),
+          amount: 123.45,
           type: MovementType.CREDIT,
           description: 'Serialization test',
           createdAt: new Date('2024-01-01T00:00:00Z'),
@@ -131,12 +124,9 @@ describe('LedgerLogHandler', () => {
 
       await handler.handle(movementEvent);
 
-      const expectedDataString = JSON.stringify(movementEvent.data);
-      expect(mockLedgerLogCreate).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          data: expectedDataString,
-        }),
-      });
+      expect(mockLedgerLogCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: movementEvent.data }),
+      );
     });
 
     it('should handle zero amount movements', async () => {
@@ -148,8 +138,9 @@ describe('LedgerLogHandler', () => {
         data: {
           id: '550e8400-e29b-41d4-a716-446655440014',
           accountId: '550e8400-e29b-41d4-a716-446655440015',
-          amount: new Decimal(0),
+          amount: 0,
           type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
           description: 'Zero amount test',
           createdAt: new Date('2024-01-01T00:00:00Z'),
         },
@@ -159,11 +150,9 @@ describe('LedgerLogHandler', () => {
 
       await handler.handle(movementEvent);
 
-      expect(mockLedgerLogCreate).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          amount: new Decimal(0),
-        }),
-      });
+      expect(mockLedgerLogCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 0 }),
+      );
     });
 
     it('should handle events without correlation ID', async () => {
@@ -176,8 +165,9 @@ describe('LedgerLogHandler', () => {
         data: {
           id: '550e8400-e29b-41d4-a716-446655440017',
           accountId: '550e8400-e29b-41d4-a716-446655440018',
-          amount: new Decimal(99.99),
+          amount: 99.99,
           type: MovementType.DEBIT,
+          status: MovementStatus.PENDING,
           description: 'No correlation ID test',
           createdAt: new Date('2024-01-01T00:00:00Z'),
         },
