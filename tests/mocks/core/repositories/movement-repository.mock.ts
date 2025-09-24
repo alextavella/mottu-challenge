@@ -7,6 +7,7 @@ export const createMovementRepositoryMock = (): IMovementRepository => ({
   create: vi.fn(),
   findById: vi.fn(),
   findByAccountId: vi.fn(),
+  updateStatus: vi.fn(),
 });
 
 /**

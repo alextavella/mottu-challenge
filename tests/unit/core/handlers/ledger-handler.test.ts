@@ -115,6 +115,7 @@ describe('LedgerLogHandler', () => {
           accountId: '550e8400-e29b-41d4-a716-446655440012',
           amount: 123.45,
           type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
           description: 'Serialization test',
           createdAt: new Date('2024-01-01T00:00:00Z'),
         },

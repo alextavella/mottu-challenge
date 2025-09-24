@@ -1,5 +1,5 @@
 import { prisma } from '@/infra/database/client';
-import { getEventManager } from '@/infra/events/event-manager';
+import { EventManager, getEventManager } from '@/infra/events/event-manager';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import {
@@ -9,9 +9,11 @@ import {
 
 describe('Health Check Routes', () => {
   let app: FastifyInstance;
+  let eventManager: EventManager;
 
   beforeAll(async () => {
     app = await createServerWithEvents();
+    eventManager = getEventManager(app.log);
   });
 
   afterAll(async () => {
@@ -82,7 +84,6 @@ describe('Health Check Routes', () => {
 
     it('should return 503 when RabbitMQ is unhealthy', async () => {
       // Mock RabbitMQ failure
-      const eventManager = getEventManager();
       vi.spyOn(eventManager, 'isConnected').mockReturnValueOnce(false);
 
       const response = await supertest(app.server).get('/health');
@@ -100,7 +101,6 @@ describe('Health Check Routes', () => {
 
     it('should handle RabbitMQ check errors gracefully', async () => {
       // Mock RabbitMQ error
-      const eventManager = getEventManager();
       vi.spyOn(eventManager, 'isConnected').mockImplementationOnce(() => {
         throw new Error('RabbitMQ check failed');
       });

@@ -27,8 +27,8 @@ export async function createAccount(fastify: FastifyInstance) {
     handler: async (request, reply) => {
       const { name, document, email } = request.body;
 
+      const eventManager = getEventManager(fastify.log);
       const accountRepository = getAccountRepository();
-      const eventManager = getEventManager();
       const createAccountUseCase = new CreateAccountUseCase(
         accountRepository,
         eventManager,

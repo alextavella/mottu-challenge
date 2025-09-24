@@ -7,7 +7,6 @@ export const createAccountRepositoryMock = (): IAccountRepository => ({
   create: vi.fn(),
   findById: vi.fn(),
   findByDocumentOrEmail: vi.fn(),
-  updateBalance: vi.fn(),
   getBalance: vi.fn(),
 });
 

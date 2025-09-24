@@ -18,6 +18,7 @@ export interface IEventManager {
   ): Promise<void>;
   startConsumer(): Promise<void>;
   stopConsumer(): Promise<void>;
+  isConnected(): boolean;
 }
 
 export interface IEventHandler<T extends BaseEvent = BaseEvent> {

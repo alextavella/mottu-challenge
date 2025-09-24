@@ -3,13 +3,12 @@ import { IAccountRepository } from '@/domain/contracts/repositories/account-repo
 import { BusinessRuleViolationError } from '@/domain/errors/account.errors';
 import { ServerError } from '@/domain/errors/server.error';
 import { IEventManager } from '@/infra/events/types';
-import { Prisma } from '@prisma/client';
 import {
   createMockAccountData,
   createMockAccountInput,
 } from 'tests/mocks/core/entities/test-data.mock';
 import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
-import { createEventManagerMock } from 'tests/mocks/infrastructure/events/event-system.mock';
+import { createEventManagerMock } from 'tests/mocks/infra/events/event-system.mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('CreateAccountUseCase', () => {
@@ -164,7 +163,7 @@ describe('CreateAccountUseCase', () => {
         name: 'John Doe',
         document: '',
         email: 'john@example.com',
-        balance: new Prisma.Decimal(1000),
+        balance: 1000,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

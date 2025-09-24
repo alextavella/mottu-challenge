@@ -4,15 +4,13 @@ import {
   getLedgerLogRepository,
   getMovementRepository,
 } from '@/infra/container/dependency-injection.container';
-import { getEventManager } from '@/infra/events/event-manager';
+import { IEventManager } from '@/infra/events/types';
 import { MovementEventType } from '../events/movement-event';
 import { CompleteMovementUseCase } from '../usecases/movements/complete-movement-usecase';
 import { LedgerLogHandler } from './ledger-handler';
 import { MovementCreatedHandler } from './movement-handler';
 
-export async function setupEventConsumers() {
-  const eventManager = getEventManager();
-
+export async function setupEventConsumers(eventManager: IEventManager) {
   // Get account repository
   const accountRepository = getAccountRepository();
   const balanceRepository = getBalanceRepository();

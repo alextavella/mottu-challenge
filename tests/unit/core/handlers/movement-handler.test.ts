@@ -2,6 +2,7 @@ import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { MovementCreatedHandler } from '@/core/handlers/movement-handler';
 import { ICompleteMovementUseCase } from '@/core/usecases/movements/complete-movement-usecase';
 import { ServerError } from '@/domain/errors/server.error';
+import { MovementStatus, MovementType } from '@prisma/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('MovementCreatedHandler', () => {
@@ -21,9 +22,15 @@ describe('MovementCreatedHandler', () => {
       const event: MovementEvent = {
         id: 'event-id',
         type: MovementEventType.CREATED,
+        version: '1.0',
         timestamp: new Date(),
         data: {
           id: movementId,
+          accountId: 'account-id',
+          amount: 100,
+          type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
+          createdAt: new Date(),
         },
       };
 
@@ -38,9 +45,15 @@ describe('MovementCreatedHandler', () => {
       const event: MovementEvent = {
         id: 'event-id',
         type: MovementEventType.CREATED,
+        version: '1.0',
         timestamp: new Date(),
         data: {
           id: 'invalid-uuid',
+          accountId: 'account-id',
+          amount: 100,
+          type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
+          createdAt: new Date(),
         },
       };
 
@@ -52,6 +65,7 @@ describe('MovementCreatedHandler', () => {
       const event: MovementEvent = {
         id: 'event-id',
         type: MovementEventType.CREATED,
+        version: '1.0',
         timestamp: new Date(),
         data: {} as any,
       };
@@ -65,14 +79,22 @@ describe('MovementCreatedHandler', () => {
       const event: MovementEvent = {
         id: 'event-id',
         type: MovementEventType.CREATED,
+        version: '1.0',
         timestamp: new Date(),
         data: {
           id: movementId,
+          accountId: 'account-id',
+          amount: 100,
+          type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
+          createdAt: new Date(),
         },
       };
 
       const useCaseError = new Error('Use case failed');
-      mockCompleteMovementUseCase.execute.mockRejectedValueOnce(useCaseError);
+      vi.mocked(mockCompleteMovementUseCase.execute).mockRejectedValueOnce(
+        useCaseError,
+      );
 
       await expect(handler.handle(event)).rejects.toThrow(ServerError);
     });
@@ -83,8 +105,14 @@ describe('MovementCreatedHandler', () => {
         id: 'event-id',
         type: MovementEventType.UPDATED,
         timestamp: new Date(),
+        version: '1.0',
         data: {
           id: movementId,
+          accountId: 'account-id',
+          amount: 100,
+          type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
+          createdAt: new Date(),
         },
       };
 
@@ -100,10 +128,16 @@ describe('MovementCreatedHandler', () => {
       const movementId = '123e4567-e89b-12d3-a456-426614174000';
       const event: MovementEvent = {
         id: 'event-id',
+        version: '1.0',
         type: MovementEventType.CREATED,
         timestamp: new Date(),
         data: {
           id: movementId,
+          accountId: 'account-id',
+          amount: 100,
+          type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
+          createdAt: new Date(),
         },
       };
 

@@ -7,7 +7,7 @@ import { IEventManager } from '@/infra/events/types';
 import { MovementStatus, MovementType } from '@prisma/client';
 import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
 import { createMovementRepositoryMock } from 'tests/mocks/core/repositories/movement-repository.mock';
-import { createEventManagerMock } from 'tests/mocks/infrastructure/events/event-system.mock';
+import { createEventManagerMock } from 'tests/mocks/infra/events/event-system.mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('CreateMovementUseCase', () => {

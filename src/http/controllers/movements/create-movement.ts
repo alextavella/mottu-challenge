@@ -30,9 +30,9 @@ export async function createMovement(fastify: FastifyInstance) {
     handler: async (request, reply) => {
       const { accountId, amount, type, description } = request.body;
 
-      const movementRepository = getMovementRepository();
+      const eventManager = getEventManager(fastify.log);
       const accountRepository = getAccountRepository();
-      const eventManager = getEventManager();
+      const movementRepository = getMovementRepository();
 
       const createMovementUseCase = new CreateMovementUseCase(
         accountRepository,

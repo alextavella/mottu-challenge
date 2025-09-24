@@ -1,5 +1,6 @@
 import { prisma } from '@/infra/database/client';
 import { getEventManager } from '@/infra/events/event-manager';
+import { IEventManager } from '@/infra/events/types';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -46,7 +47,7 @@ async function checkDatabaseHealth(): Promise<{
   }
 }
 
-async function checkRabbitMQHealth(): Promise<{
+async function checkRabbitMQHealth(eventManager: IEventManager): Promise<{
   status: 'healthy' | 'unhealthy';
   message?: string;
   responseTime: number;
@@ -54,7 +55,6 @@ async function checkRabbitMQHealth(): Promise<{
   const startTime = Date.now();
 
   try {
-    const eventManager = getEventManager();
     const isConnected = eventManager.isConnected();
     const responseTime = Date.now() - startTime;
 
@@ -112,10 +112,12 @@ export async function healthCheck(fastify: FastifyInstance) {
     handler: async (request, reply) => {
       const timestamp = new Date().toISOString();
 
+      const eventManager = getEventManager(fastify.log);
+
       // Execute health checks in parallel
       const [databaseHealth, rabbitmqHealth] = await Promise.all([
         checkDatabaseHealth(),
-        checkRabbitMQHealth(),
+        checkRabbitMQHealth(eventManager),
       ]);
 
       const services = {

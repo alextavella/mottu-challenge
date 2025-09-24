@@ -91,7 +91,7 @@ export async function createServerWithEvents(): Promise<FastifyInstance> {
     app.log.info('Event system initialized successfully');
 
     // Setup event consumers
-    setupEventConsumers();
+    setupEventConsumers(eventManager);
     app.log.info('Event consumers started successfully');
 
     // Wait for app to be ready

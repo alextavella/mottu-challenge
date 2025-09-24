@@ -2,7 +2,7 @@ import { RabbitMQConnection } from '@/infra/events/connection';
 import { RabbitMQEventConsumer } from '@/infra/events/consumer';
 import { RabbitMQEventPublisher } from '@/infra/events/publisher';
 import { BaseEvent, IEventHandler, IEventManager } from '@/infra/events/types';
-import type { Mocked } from 'vitest';
+import { vi, type Mocked } from 'vitest';
 
 /**
  * Mock do IEventManager para uso em testes unitários

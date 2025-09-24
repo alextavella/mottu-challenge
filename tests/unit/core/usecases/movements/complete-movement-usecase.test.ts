@@ -60,6 +60,7 @@ describe('CompleteMovementUseCase', () => {
       subscribe: vi.fn(),
       startConsumer: vi.fn(),
       stopConsumer: vi.fn(),
+      isConnected: vi.fn().mockReturnValue(true),
     };
 
     useCase = new CompleteMovementUseCase(

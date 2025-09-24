@@ -21,7 +21,7 @@ async function start() {
     app.log.info('Event system initialized successfully');
 
     // Setup event consumers
-    setupEventConsumers();
+    setupEventConsumers(eventManager);
     app.log.info('Event consumers started successfully');
 
     // Start server

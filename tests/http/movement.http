@@ -1,6 +1,5 @@
 @baseUrl = http://localhost:3000
-@accountId = d280b3e4-6a63-4d00-a769-921adea15ec8
-@accountId2 = 77ff3a33-a024-4a01-b0e8-0ea45012cedd
+@accountId = 29baf884-6f89-4530-af5c-7972212ad877
 
 ### Create movement [CREDIT]
 # @name createMovement
@@ -20,8 +19,8 @@ POST {{baseUrl}}/v1/movements
 Content-Type: application/json
 
 {
-  "accountId": "{{accountId2}}",
-  "amount": 100,
+  "accountId": "{{accountId}}",
+  "amount": 50,
   "type": "DEBIT",
   "description": "Venda no mercado"
 }
