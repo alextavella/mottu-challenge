@@ -41,11 +41,11 @@ export class MovementRepository implements IMovementRepository {
   }
 
   async findById(id: string): Promise<MovementData | null> {
-    return await this.prisma.movement
-      .findUnique({
-        where: { id },
-      })
-      .then((movement) => movementSchema.parse(movement));
+    const movement = await this.prisma.movement.findUnique({
+      where: { id },
+    });
+
+    return movement ? movementSchema.parse(movement) : null;
   }
 
   async findByAccountId(

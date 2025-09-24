@@ -7,6 +7,17 @@ import { PrismaClient } from '@prisma/client';
 
 export class AccountRepository implements IAccountRepository {
   constructor(private readonly prisma: PrismaClient) {}
+  updateBalance(): Promise<{
+    id: string;
+    name: string;
+    document: string;
+    email: string;
+    balance: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
+    throw new Error('Method not implemented.');
+  }
 
   async create(data: CreateAccountData): Promise<AccountData> {
     return await this.prisma.account
@@ -22,32 +33,32 @@ export class AccountRepository implements IAccountRepository {
   }
 
   async findById(id: string): Promise<AccountData | null> {
-    return await this.prisma.account
-      .findUnique({
-        where: { id },
-      })
-      .then((account) => accountSchema.parse(account));
+    const account = await this.prisma.account.findUnique({
+      where: { id },
+    });
+
+    return account ? accountSchema.parse(account) : null;
   }
 
   async findByDocumentOrEmail(
     document: string,
     email: string,
   ): Promise<AccountData | null> {
-    return await this.prisma.account
-      .findFirst({
-        where: {
-          OR: [{ document }, { email }],
-        },
-      })
-      .then((account) => accountSchema.parse(account));
+    const account = await this.prisma.account.findFirst({
+      where: {
+        OR: [{ document }, { email }],
+      },
+    });
+
+    return account ? accountSchema.parse(account) : null;
   }
 
   async getBalance(id: string): Promise<number | null> {
-    return await this.prisma.account
-      .findUnique({
-        where: { id },
-        select: { balance: true },
-      })
-      .then((account) => accountSchema.parse(account).balance);
+    const account = await this.prisma.account.findUnique({
+      where: { id },
+      select: { balance: true },
+    });
+
+    return account ? accountSchema.parse(account).balance : null;
   }
 }
