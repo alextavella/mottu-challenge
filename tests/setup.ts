@@ -3,7 +3,16 @@ import { config } from 'dotenv';
 config({ path: '.env.test' });
 
 import { execSync } from 'child_process';
-import { afterAll, beforeAll, beforeEach } from 'vitest';
+
+// Handle unhandled rejections from RabbitMQ during test teardown
+process.on('unhandledRejection', (reason, promise) => {
+  // Only log if it's not a RabbitMQ channel error (expected during teardown)
+  if (reason instanceof Error && reason.message.includes('Channel ended')) {
+    // This is expected during test teardown, so we can ignore it
+    return;
+  }
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 // Setup test database
 beforeAll(async () => {
