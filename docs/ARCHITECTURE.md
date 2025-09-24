@@ -17,23 +17,26 @@ API REST para sistema de movimentações financeiras implementada com **Clean Ar
 
 ```
 src/
-├── core/                    # 🎯 DOMÍNIO (regras de negócio)
+├── domain/                  # 🎯 DOMÍNIO (regras de negócio)
 │   ├── entities/            # Entidades de domínio
-│   ├── usecases/            # Casos de uso por feature
 │   ├── contracts/           # Interfaces/contratos
 │   └── errors/              # Erros de domínio por contexto
-├── adapters/                # 🔌 ADAPTADORES (conversores)
+├── core/                    # 🔧 CORE (casos de uso e handlers)
+│   ├── events/              # Eventos de domínio
+│   ├── handlers/            # Handlers de eventos
+│   ├── repositories/        # Implementações de repositórios
+│   └── usecases/            # Casos de uso por feature
+├── http/                    # 🌐 HTTP (controllers e servidor)
 │   ├── controllers/         # Controllers por feature
-│   └── repositories/        # Implementações de repositórios
-├── infrastructure/          # 🏗️ INFRAESTRUTURA (detalhes técnicos)
-│   ├── database/            # Cliente do banco
-│   ├── http/                # Servidor web (Fastify)
-│   ├── events/              # Sistema de eventos
-│   ├── config/              # Configurações
-│   └── container/           # Injeção de dependência
-└── main/                    # 🚀 COMPOSIÇÃO (wiring)
-    ├── routes/              # Registro de rotas
-    └── server.ts            # Configuração final
+│   ├── errors/              # Erros HTTP
+│   ├── middlewares/         # Middlewares HTTP
+│   ├── plugins/             # Plugins do Fastify
+│   └── routes/              # Registro de rotas
+└── infra/                   # 🏗️ INFRAESTRUTURA (detalhes técnicos)
+    ├── config/              # Configurações
+    ├── container/           # Injeção de dependência
+    ├── database/            # Cliente do banco
+    └── events/              # Sistema de eventos
 ```
 
 ### Testes
@@ -41,12 +44,14 @@ src/
 ```
 tests/
 ├── unit/                    # Testes unitários (isolados)
-│   ├── core/               # Domínio (use cases, erros)
-│   └── infrastructure/     # Infraestrutura (eventos, validação)
+│   └── core/               # Core (entities, errors, handlers, usecases)
 ├── integration/             # Testes de integração (E2E)
-│   └── adapters/controllers/ # Controllers por feature
+│   └── adapters/           # Controllers por feature
 ├── mocks/                   # Mocks por camada
-└── helpers/                 # Utilitários de teste
+│   ├── core/               # Mocks do core
+│   └── infrastructure/     # Mocks da infraestrutura
+├── helpers/                 # Utilitários de teste
+└── http/                    # Arquivos de teste HTTP
 ```
 
 ## 🎯 Regras Fundamentais
@@ -54,19 +59,21 @@ tests/
 ### 1. Fluxo de Dependências
 
 ```
-Main → Infrastructure → Adapters → Core
+HTTP → Core → Domain
+Infra → Core → Domain
 ```
 
-- **Core**: Regras de negócio puras (independente)
-- **Adapters**: Conversores entre core e mundo externo
-- **Infrastructure**: Detalhes técnicos (DB, HTTP, Events)
-- **Main**: Composição e wiring de dependências
+- **Domain**: Regras de negócio puras (independente)
+- **Core**: Casos de uso e implementações de repositórios
+- **HTTP**: Controllers e servidor web
+- **Infra**: Detalhes técnicos (DB, Events, Config)
 
 ### 2. Dependency Rule
 
 - Dependências **sempre** apontam para dentro
-- Core **nunca** conhece detalhes externos
-- Use cases recebem dependências via **interfaces**
+- Domain **nunca** conhece detalhes externos
+- Core depende apenas do Domain
+- HTTP e Infra dependem do Core e Domain
 
 ### 3. SOLID Principles
 
