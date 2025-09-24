@@ -12,6 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
+    "sourceMap": true,
     "outDir": "./dist",
     "rootDir": ".",
     "baseUrl": ".",

@@ -16,7 +16,7 @@ async function start() {
     app.log.info('Database connected successfully');
 
     // Initialize event system
-    const eventManager = getEventManager();
+    const eventManager = getEventManager(app.log);
     await eventManager.initialize();
     app.log.info('Event system initialized successfully');
 
@@ -30,7 +30,10 @@ async function start() {
       host: '0.0.0.0',
     });
 
-    app.log.info(`Server listening on port ${env.PORT}`);
+    // Wait for app to be ready
+    await app.ready().then(() => {
+      app.log.info(`Server listening on port ${env.PORT}`);
+    });
   } catch (error) {
     app.log.error(error);
     process.exit(1);

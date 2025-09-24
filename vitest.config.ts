@@ -10,6 +10,9 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
     },
+    // Debug configuration
+    inspectBrk: false,
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
