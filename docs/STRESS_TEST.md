@@ -26,11 +26,12 @@ brew install jq
 ## 🧪 O que o Teste Faz
 
 1. **Cria uma conta de teste nova** com saldo inicial de R$ 1.000,00 (sempre única)
-2. **Envia 12 saques simultâneos** de R$ 100,00 cada (total: R$ 1.000,00)
+2. **Envia 12 saques simultâneos** de R$ 100,00 cada (total: R$ 1.200,00)
 3. **Aguarda processamento** dos eventos (30 segundos)
 4. **Verifica consistência** do saldo final
 5. **Detecta race conditions** se o saldo não corresponder ao esperado
-6. **Remove a conta** automaticamente ao final
+6. **Valida movimentos cancelados** devido a saldo insuficiente
+7. **Remove a conta** automaticamente ao final
 
 ## 🔍 Sinais de Race Condition
 
@@ -42,11 +43,11 @@ brew install jq
 ## 📊 Resultado Esperado
 
 - **Saldo inicial**: R$ 1.000,00
-- **Valor dos saques**: R$ 1.000,00 (12 × R$ 100,00)
+- **Valor dos saques**: R$ 1.200,00 (12 × R$ 100,00)
 - **Saldo esperado**: R$ 0,00
-- **Movimentos processados**: 12
+- **Movimentos processados**: 10 (apenas os que cabem no saldo)
 - **Movimentos pendentes**: 0
-- **Movimentos cancelados**: 2
+- **Movimentos cancelados**: 2 (devido a saldo insuficiente)
 
 ## ⚠️ Se o Teste Falhar
 

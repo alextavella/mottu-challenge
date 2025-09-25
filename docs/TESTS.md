@@ -7,13 +7,38 @@ Este projeto utiliza **Vitest** como framework de testes, fornecendo testes ráp
 ```
 tests/
 ├── setup.ts                 # Configuração global dos testes
-├── unit/                    # Testes unitários
-│   ├── domain/             # Testes da camada de domínio
-│   │   └── errors.test.ts  # Testes das classes de erro
-│   ├── lib/                # Testes das bibliotecas
-│   │   └── events/         # Testes do sistema de eventos
-│   └── utils/              # Testes utilitários
-└── README.md               # Este arquivo
+├── unit/                    # Testes unitários (isolados)
+│   ├── core/               # Core (entities, errors, handlers, usecases)
+│   │   ├── entities/       # Entidades de domínio
+│   │   ├── errors/         # Erros de domínio
+│   │   ├── events/         # Eventos de domínio
+│   │   ├── handlers/       # Handlers de eventos
+│   │   ├── repositories/   # Repositórios
+│   │   └── usecases/       # Casos de uso
+│   ├── domain/             # Testes de domínio
+│   │   ├── entities/       # Entidades
+│   │   └── errors/         # Erros por contexto
+│   ├── http/               # Testes HTTP
+│   │   └── middlewares/    # Middlewares
+│   └── infrastructure/     # Testes de infraestrutura
+│       └── events/         # Sistema de eventos
+├── integration/             # Testes de integração (E2E)
+│   ├── accounts/           # Testes de contas
+│   ├── movements/          # Testes de movimentações
+│   └── health/             # Testes de health check
+├── helpers/                 # Utilitários de teste
+│   ├── database-test-helper.ts
+│   ├── event-test-helper.ts
+│   ├── mock-helpers.ts
+│   ├── server-test-helper.ts
+│   └── validation-test-helper.ts
+├── mocks/                   # Mocks para testes
+│   ├── core/               # Mocks do core
+│   └── infra/              # Mocks da infraestrutura
+└── http/                    # Arquivos HTTP para testes
+    ├── account.http
+    ├── health.http
+    └── movement.http
 ```
 
 ## 🚀 Comandos Disponíveis
@@ -43,11 +68,17 @@ pnpm test
 # Executar apenas testes unitários
 pnpm test:run tests/unit/
 
+# Executar apenas testes de integração
+pnpm test:run tests/integration/
+
 # Executar testes de um arquivo específico
 pnpm test:run tests/unit/domain/errors.test.ts
 
 # Executar testes que correspondem a um padrão
 pnpm test:run --grep "BusinessError"
+
+# Executar testes de uma feature específica
+pnpm test:run tests/unit/core/usecases/accounts/
 ```
 
 ## 📊 Relatório de Cobertura
@@ -222,13 +253,15 @@ it('should debug test', () => {
 - ✅ **Testes de Erros de Domínio**: Implementados
 - ✅ **Testes de Tipos de Eventos**: Implementados
 - ✅ **Testes de Validação**: Implementados
+- ✅ **Testes de Casos de Uso**: Implementados
+- ✅ **Testes de Integração**: Implementados
+- ✅ **Testes de Race Conditions**: Implementados
 - ✅ **Relatório de Cobertura**: Configurado
-- 🔄 **Testes de Casos de Uso**: Em desenvolvimento
-- 🔄 **Testes de Integração**: Planejados
+- ✅ **Mocks e Helpers**: Implementados
 
 ### Métricas Atuais
 
-- **15 testes** passando
-- **3 arquivos** de teste
-- **2.36%** cobertura geral (em desenvolvimento)
-- **83.33%** cobertura da camada de erros
+- **Múltiplos arquivos** de teste organizados por camada
+- **Cobertura configurada** (HTML + JSON + Text)
+- **Testes unitários e de integração** completos
+- **Testes de race condition** para validação de consistência

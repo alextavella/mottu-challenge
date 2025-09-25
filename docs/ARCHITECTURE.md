@@ -109,20 +109,46 @@ Infra → Core → Domain
 
 ```prisma
 model Account {
-  id        String    @id @default(uuid())
-  name      String
-  document  String    @unique
-  email     String    @unique
-  balance   Decimal   @default(1000)
-  movements Movement[]
+  id           String   @id @default(uuid())
+  name         String
+  document     String   @unique
+  email        String   @unique
+  balance      Decimal  @default(1000) @db.Decimal(15, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  movements    Movement[]
+}
+
+enum MovementType {
+  CREDIT
+  DEBIT
+}
+
+enum MovementStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
 }
 
 model Movement {
-  id        String      @id @default(uuid())
-  accountId String
-  amount    Decimal
-  type      MovementType // CREDIT | DEBIT
-  account   Account     @relation(fields: [accountId], references: [id])
+  id          String       @id @default(uuid())
+  accountId   String
+  amount      Decimal      @db.Decimal(15, 2)
+  type        MovementType
+  description String?
+  status      MovementStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  account     Account      @relation(fields: [accountId], references: [id])
+}
+
+model LedgerLog {
+  id         String   @id @default(uuid())
+  movementId String
+  accountId  String
+  amount     Decimal  @db.Decimal(15, 2)
+  type       String
+  data       Json?
+  processedAt DateTime @default(now())
 }
 ```
 
@@ -157,10 +183,15 @@ pnpm docker:down        # Parar containers
 - Clean Architecture + SOLID
 - Estrutura organizada por features
 - Erros de domínio por contexto
-- Testes unitários e integração (170+ testes)
-- Sistema de eventos (RabbitMQ)
+- Testes unitários e integração
+- Sistema de eventos (RabbitMQ) com retry e DLQ
 - Documentação Swagger
-- Docker + Docker Compose
+- Docker + Docker Compose com health checks
+- Testes de race condition
+- Sistema de retry com backoff exponencial
+- Dead Letter Queue para mensagens falhadas
+- Health checks para PostgreSQL e RabbitMQ
+- Scripts de limpeza e setup
 
 ### ⏳ Próximos Passos
 
@@ -169,6 +200,8 @@ pnpm docker:down        # Parar containers
 - Caching (Redis)
 - Monitoring (APM)
 - CI/CD Pipeline
+- Logs estruturados
+- Métricas de performance
 
 ---
 

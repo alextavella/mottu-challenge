@@ -1,17 +1,18 @@
 # 📘 Mini Ledger
 
-Sistema de registro de movimentações financeiras (Mini Ledger) desenvolvido com Fastify, TypeScript, Prisma e PostgreSQL.
+Sistema de registro de movimentações financeiras (Mini Ledger) desenvolvido com **Clean Architecture**, **Fastify**, **TypeScript**, **Prisma** e **PostgreSQL**.
 
 ## 🚀 Tecnologias
 
-- **Node.js** com **TypeScript**
-- **Fastify** - Framework web
+- **Node.js 22+** com **TypeScript**
+- **Fastify** - Framework web moderno e rápido
 - **Prisma** - ORM para PostgreSQL
 - **Zod** - Validação de schemas
 - **PostgreSQL** - Banco de dados
-- **RabbitMQ** - Message broker
+- **RabbitMQ** - Message broker para eventos
 - **Docker** - Containerização
 - **pnpm** - Package manager (mais rápido e eficiente)
+- **Vitest** - Framework de testes
 
 ## 📋 Pré-requisitos
 
@@ -86,8 +87,11 @@ EVENTS_RETRY_DELAY=5000
 ### 3. Inicie os serviços com Docker
 
 ```bash
-# Inicie PostgreSQL e RabbitMQ
+# Inicie todos os serviços (PostgreSQL, RabbitMQ, Migrations e App)
 docker-compose up -d
+
+# Ou inicie apenas a infraestrutura (sem a aplicação)
+docker-compose up -d postgres rabbitmq pgadmin
 
 # Verifique se os serviços estão rodando
 docker-compose ps
@@ -99,8 +103,11 @@ docker-compose ps
 # Gere o cliente Prisma (OBRIGATÓRIO - deve ser executado primeiro)
 pnpm db:generate
 
-# Execute as migrations
+# Execute as migrations (desenvolvimento)
 pnpm db:migrate
+
+# Ou execute as migrations via Docker
+pnpm docker:migrate
 
 # (Opcional) Abra o Prisma Studio para visualizar os dados
 pnpm db:studio
@@ -140,6 +147,23 @@ pnpm db:migrate         # Executa migrations em desenvolvimento
 pnpm db:deploy          # Executa migrations em produção
 pnpm db:studio          # Abre Prisma Studio
 pnpm db:seed            # Executa seeds do banco
+
+# Docker
+pnpm docker:up          # Inicia containers
+pnpm docker:down        # Para containers
+pnpm docker:logs        # Visualiza logs da aplicação
+pnpm docker:build       # Build dos containers
+pnpm docker:migrate     # Executa migrations via Docker
+
+# Testes
+pnpm test               # Executa testes em modo watch
+pnpm test:run           # Executa todos os testes uma vez
+pnpm test:watch         # Executa testes em modo watch
+pnpm test:ui            # Interface visual dos testes
+pnpm test:coverage      # Executa testes com cobertura
+
+# Git Hooks
+pnpm commit             # Commit interativo com Commitizen
 ```
 
 ## 🌐 Endpoints da API
@@ -200,64 +224,84 @@ tests/
 
 ### Status Atual
 
-- ✅ **15 testes** passando
 - ✅ **Cobertura configurada** (HTML + JSON + Text)
+- ✅ **Testes unitários** (domain, core, http)
+- ✅ **Testes de integração** (E2E)
 - ✅ **Testes de erros de domínio**
 - ✅ **Testes de tipos de eventos**
-- 🔄 **Testes de casos de uso** (em desenvolvimento)
+- ✅ **Testes de casos de uso**
+- ✅ **Testes de race conditions**
 
-Para mais detalhes, consulte [tests/README.md](./tests/README.md).
+Para mais detalhes, consulte [docs/TESTS.md](./docs/TESTS.md).
 
 ## 🐳 Serviços Docker
 
 O projeto inclui os seguintes serviços:
 
-- **PostgreSQL** - Porta 5432
-- **RabbitMQ** - Porta 5672 (AMQP) e 15672 (Management UI)
+- **PostgreSQL** - Porta 5432 (com health check)
+- **RabbitMQ** - Porta 5672 (AMQP) e 15672 (Management UI) (com health check)
 - **PgAdmin** - Porta 5050 (Interface web para PostgreSQL)
+- **Migrations** - Executa automaticamente as migrations do Prisma
+- **App** - Aplicação principal (Porta 3000)
 
 ### Acessos:
 
+- **Aplicação**: http://localhost:3000
+- **Documentação Swagger**: http://localhost:3000/docs
 - **RabbitMQ Management**: http://localhost:15672 (admin/admin)
 - **PgAdmin**: http://localhost:5050 (admin@admin.com/admin)
 
+### Health Checks:
+
+- **PostgreSQL**: Verifica se o banco está pronto para conexões
+- **RabbitMQ**: Verifica conectividade das portas AMQP
+- **App**: Aguarda PostgreSQL e RabbitMQ estarem saudáveis antes de iniciar
+
 ## 📁 Estrutura do Projeto
 
-### **🏗️ Arquitetura Modular:**
+### **🏗️ Clean Architecture:**
 
-- **Cada rota em arquivo separado** com nome descritivo
-- **Schemas Zod integrados** com fastify-type-provider-zod
-- **Validação automática** de request/response
-- **Error handling centralizado** com tratamento específico para Zod
-- **Swagger/OpenAPI** gerado automaticamente dos schemas
+- **Domain**: Regras de negócio puras (entities, contracts, errors)
+- **Core**: Casos de uso e implementações de repositórios
+- **HTTP**: Controllers e servidor web
+- **Infra**: Detalhes técnicos (DB, Events, Config)
 
 ```
 src/
-├── config/          # Configurações (env, swagger, etc.)
-├── database/        # Cliente Prisma e utilitários
-├── http/            # Camada HTTP
-│   ├── middlewares/ # Middlewares (error handler, etc.)
-│   ├── routes/      # Módulos de rotas organizados por domínio
-│   │   ├── accounts/        # Módulo de contas
-│   │   │   ├── create-account.ts      # POST /accounts
-│   │   │   ├── get-account-balance.ts # GET /accounts/:id/balance
-│   │   │   └── schemas.ts             # Schemas compartilhados
-│   │   ├── movements/       # Módulo de movimentações
-│   │   │   ├── create-movement.ts     # POST /movements
-│   │   │   └── schemas.ts             # Schemas compartilhados
-│   │   ├── health/          # Módulo de health check
-│   │   │   ├── health-check.ts        # GET /health
-│   │   │   └── schemas.ts             # Schemas compartilhados
-│   │   └── index.ts         # Registro de todas as rotas
-│   └── server.ts    # Configuração do servidor Fastify
-└── app.ts           # Ponto de entrada da aplicação
+├── domain/                  # 🎯 DOMÍNIO (regras de negócio)
+│   ├── entities/            # Entidades de domínio
+│   ├── contracts/           # Interfaces/contratos
+│   └── errors/              # Erros de domínio por contexto
+├── core/                    # 🔧 CORE (casos de uso e handlers)
+│   ├── events/              # Eventos de domínio
+│   ├── handlers/            # Handlers de eventos
+│   ├── repositories/        # Implementações de repositórios
+│   └── usecases/            # Casos de uso por feature
+├── http/                    # 🌐 HTTP (controllers e servidor)
+│   ├── controllers/         # Controllers por feature
+│   ├── errors/              # Erros HTTP
+│   ├── middlewares/         # Middlewares HTTP
+│   ├── plugins/             # Plugins do Fastify
+│   └── routes/              # Registro de rotas
+└── infra/                   # 🏗️ INFRAESTRUTURA (detalhes técnicos)
+    ├── config/              # Configurações
+    ├── container/           # Injeção de dependência
+    ├── database/            # Cliente do banco
+    └── events/              # Sistema de eventos
 
-prisma/
-├── schema.prisma    # Schema do banco de dados
-└── migrations/      # Migrations do banco
+tests/
+├── unit/                    # Testes unitários
+├── integration/             # Testes de integração
+├── helpers/                 # Utilitários de teste
+└── setup.ts                # Configuração global
 
 docs/
-└── CHALLENGE.md     # Descrição do desafio
+├── ARCHITECTURE.md          # Arquitetura do sistema
+├── CHALLENGE.md             # Descrição do desafio
+├── DOCKER.md                # Setup Docker
+├── EVENT_MANAGER.md         # Sistema de eventos
+├── STRESS_TEST.md           # Testes de race condition
+└── TESTS.md                 # Guia de testes
 ```
 
 ## 🧪 Desenvolvimento
@@ -316,5 +360,10 @@ git commit -m "feat: nova funcionalidade"
 - [x] Implementar consumer para LedgerLog
 - [x] Configurar Vitest e testes básicos
 - [x] Expandir cobertura de testes unitários e de integração
-- [ ] Implementar tratamento de erros e retry
+- [x] Implementar tratamento de erros e retry
 - [x] Adicionar documentação Swagger
+- [x] Implementar Clean Architecture
+- [x] Adicionar health checks no Docker
+- [x] Implementar testes de race condition
+- [x] Melhorar sistema de eventos com retry e DLQ
+- [x] Adicionar scripts de limpeza e setup
