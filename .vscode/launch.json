@@ -23,45 +23,6 @@
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
-    },
-    {
-      "name": "🧪 Vitest: Debug All",
-      "type": "node",
-      "request": "launch",
-      "autoAttachChildProcesses": true,
-      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-      "args": ["run", "--threads=false"],
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env",
-      "console": "integratedTerminal",
-      "smartStep": true
-    },
-    {
-      "name": "🧪 Vitest: Watch",
-      "type": "node",
-      "request": "launch",
-      "autoAttachChildProcesses": true,
-      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-      "args": ["--watch", "--threads=false"],
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env",
-      "console": "integratedTerminal",
-      "smartStep": true
-    },
-    {
-      "name": "🧪 Vitest: Debug Current File",
-      "type": "node",
-      "request": "launch",
-      "autoAttachChildProcesses": true,
-      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-      "args": ["run", "${relativeFile}"],
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env",
-      "console": "integratedTerminal",
-      "smartStep": true
     }
   ],
   "compounds": [
