@@ -1,5 +1,5 @@
-import { GetAccountBalanceUseCase } from '@/core/usecases/accounts/get-account-balance-usecase';
-import { getAccountRepository } from '@/infra/container/dependency-injection.container';
+import { UseCaseContainer } from '@/core/usecases/container/usecase.container';
+import { getEventManager } from '@/infra/events/event-manager';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -29,10 +29,9 @@ export async function getAccountBalance(fastify: FastifyInstance) {
     handler: async (request, reply) => {
       const { id: accountId } = request.params;
 
-      const accountRepository = getAccountRepository();
-      const getAccountBalanceUseCase = new GetAccountBalanceUseCase(
-        accountRepository,
-      );
+      const eventManager = getEventManager(fastify.log);
+      const container = UseCaseContainer.getInstance(eventManager);
+      const getAccountBalanceUseCase = container.getGetAccountBalanceUseCase();
 
       const accountBalance = await getAccountBalanceUseCase.execute({
         accountId,

@@ -23,3 +23,15 @@ export const ledgerLogSchema = z.object({
 });
 
 export type LedgerLogData = z.infer<typeof ledgerLogSchema>;
+
+export const createLedgerLogSchema = z.object({
+  movementId: z.uuid({ message: 'MovementId deve ser um UUID válido' }),
+  accountId: z.uuid({ message: 'AccountId deve ser um UUID válido' }),
+  type: z.enum(['CREDIT', 'DEBIT'], {
+    message: 'Tipo de movimento é obrigatório',
+  }),
+  amount: z.number({ message: 'Amount é obrigatório' }),
+  data: z.record(z.string(), z.any()),
+});
+
+export type CreateLedgerLogData = z.infer<typeof createLedgerLogSchema>;

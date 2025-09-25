@@ -1,9 +1,5 @@
-import { CreateMovementUseCase } from '@/core/usecases/movements/create-movement-usecase';
+import { UseCaseContainer } from '@/core/usecases/container/usecase.container';
 import { createMovementSchema } from '@/domain/entities/movement.entity';
-import {
-  getAccountRepository,
-  getMovementRepository,
-} from '@/infra/container/dependency-injection.container';
 import { getEventManager } from '@/infra/events/event-manager';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -31,14 +27,8 @@ export async function createMovement(fastify: FastifyInstance) {
       const { accountId, amount, type, description } = request.body;
 
       const eventManager = getEventManager(fastify.log);
-      const accountRepository = getAccountRepository();
-      const movementRepository = getMovementRepository();
-
-      const createMovementUseCase = new CreateMovementUseCase(
-        accountRepository,
-        movementRepository,
-        eventManager,
-      );
+      const container = UseCaseContainer.getInstance(eventManager);
+      const createMovementUseCase = container.getCreateMovementUsecase();
 
       const movement = await createMovementUseCase.execute({
         accountId,

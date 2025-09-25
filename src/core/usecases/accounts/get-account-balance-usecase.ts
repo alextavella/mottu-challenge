@@ -11,7 +11,9 @@ type Output = {
   balance: number;
 };
 
-export class GetAccountBalanceUseCase implements IUseCase<Input, Output> {
+export type IGetAccountBalanceUseCase = IUseCase<Input, Output>;
+
+export class GetAccountBalanceUseCase implements IGetAccountBalanceUseCase {
   constructor(private readonly accountRepository: IAccountRepository) {}
 
   async execute(input: Input): Promise<Output> {

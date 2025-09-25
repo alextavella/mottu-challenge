@@ -1,6 +1,5 @@
-import { CreateAccountUseCase } from '@/core/usecases/accounts/create-account-usecase';
+import { UseCaseContainer } from '@/core/usecases/container/usecase.container';
 import { createAccountSchema } from '@/domain/entities/account.entity';
-import { getAccountRepository } from '@/infra/container/dependency-injection.container';
 import { getEventManager } from '@/infra/events/event-manager';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -28,11 +27,8 @@ export async function createAccount(fastify: FastifyInstance) {
       const { name, document, email } = request.body;
 
       const eventManager = getEventManager(fastify.log);
-      const accountRepository = getAccountRepository();
-      const createAccountUseCase = new CreateAccountUseCase(
-        accountRepository,
-        eventManager,
-      );
+      const container = UseCaseContainer.getInstance(eventManager);
+      const createAccountUseCase = container.getCreateAccountUsecase();
 
       const account = await createAccountUseCase.execute({
         name,

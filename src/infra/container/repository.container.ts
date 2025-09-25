@@ -8,8 +8,9 @@ import { ILedgerLogRepository } from '@/domain/contracts/repositories/ledger-log
 import { IMovementRepository } from '@/domain/contracts/repositories/movement-repository';
 import { PrismaClient } from '@prisma/client';
 
-export class Container {
-  private static instance: Container;
+export class RepositoryContainer {
+  private static instance: RepositoryContainer;
+
   private prismaClient: PrismaClient;
   private accountRepository: IAccountRepository;
   private balanceRepository: IBalanceRepository;
@@ -24,11 +25,11 @@ export class Container {
     this.ledgerLogRepository = new LedgerLogRepository(this.prismaClient);
   }
 
-  static getInstance(): Container {
-    if (!Container.instance) {
-      Container.instance = new Container();
+  static getInstance(): RepositoryContainer {
+    if (!RepositoryContainer.instance) {
+      RepositoryContainer.instance = new RepositoryContainer();
     }
-    return Container.instance;
+    return RepositoryContainer.instance;
   }
 
   getPrismaClient(): PrismaClient {
@@ -55,13 +56,3 @@ export class Container {
     await this.prismaClient.$disconnect();
   }
 }
-
-// Factory functions for easy access
-export const getContainer = () => Container.getInstance();
-export const getAccountRepository = () => getContainer().getAccountRepository();
-export const getBalanceRepository = () => getContainer().getBalanceRepository();
-export const getMovementRepository = () =>
-  getContainer().getMovementRepository();
-export const getLedgerLogRepository = () =>
-  getContainer().getLedgerLogRepository();
-export const getPrismaClient = () => getContainer().getPrismaClient();

@@ -12,7 +12,9 @@ type Output = {
   accountId: string;
 };
 
-export class CreateAccountUseCase implements IUseCase<Input, Output> {
+export type ICreateAccountUseCase = IUseCase<Input, Output>;
+
+export class CreateAccountUseCase implements ICreateAccountUseCase {
   constructor(
     private readonly accountRepository: IAccountRepository,
     private readonly eventManager: IEventManager,
