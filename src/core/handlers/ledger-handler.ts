@@ -1,21 +1,13 @@
-import { ILedgerLogRepository } from '@/domain/contracts/repositories/ledger-log-repository';
-import { ServerError, throwServerError } from '@/domain/errors/server.error';
+import { createLedgerLogSchema } from '@/domain/entities/ledger-log.entity';
+import { ServerError } from '@/domain/errors/server.error';
 import { IEventHandler } from '@/infra/events/types';
-import { z } from 'zod';
 import { MovementEvent } from '../events/movement-event';
-
-const ledgerLogSchema = z.object({
-  movementId: z.uuid({ message: 'MovementId deve ser um UUID válido' }),
-  accountId: z.uuid({ message: 'AccountId deve ser um UUID válido' }),
-  type: z.enum(['CREDIT', 'DEBIT'], {
-    message: 'Tipo de movimento é obrigatório',
-  }),
-  amount: z.number({ message: 'Amount é obrigatório' }),
-  data: z.record(z.string(), z.any()),
-});
+import { ICreateLedgerLogUseCase } from '../usecases/ledger-log/create-ledger-log-usecase';
 
 export class LedgerLogHandler implements IEventHandler<MovementEvent> {
-  constructor(private readonly ledgerLogRepository: ILedgerLogRepository) {}
+  constructor(
+    private readonly createLedgerLogUseCase: ICreateLedgerLogUseCase,
+  ) {}
 
   async handle(event: MovementEvent): Promise<void> {
     const ledgerLogData = {
@@ -26,7 +18,7 @@ export class LedgerLogHandler implements IEventHandler<MovementEvent> {
       data: event.data || {},
     };
 
-    const result = ledgerLogSchema.safeParse(ledgerLogData);
+    const result = createLedgerLogSchema.safeParse(ledgerLogData);
 
     if (!result.success) {
       throw new ServerError(
@@ -35,14 +27,13 @@ export class LedgerLogHandler implements IEventHandler<MovementEvent> {
       );
     }
 
-    const ledgerData = result.data;
-
-    await this.ledgerLogRepository
-      .create(ledgerData)
-      .catch(
-        throwServerError(
-          `Failed to create ledger log for movement ${ledgerData.movementId}`,
-        ),
+    try {
+      await this.createLedgerLogUseCase.execute(result.data);
+    } catch (error) {
+      throw new ServerError(
+        `Failed to create ledger log for movement ${event.data.id}`,
+        error as Error,
       );
+    }
   }
 }
