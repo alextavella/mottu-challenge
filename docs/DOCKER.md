@@ -7,18 +7,19 @@ Este documento descreve como usar o Docker para executar a aplicação Mini Ledg
 O setup Docker inclui os seguintes serviços:
 
 1. **postgres**: Banco de dados PostgreSQL com healthcheck
-2. **migrations**: Executa as migrations do Prisma automaticamente
-3. **app**: Aplicação principal que aguarda as migrations serem concluídas
-4. **rabbitmq**: Message broker para eventos
+2. **rabbitmq**: Message broker para eventos com healthcheck e persistência
+3. **migrations**: Executa as migrations do Prisma automaticamente
+4. **app**: Aplicação principal que aguarda as migrations serem concluídas
 5. **pgadmin**: Interface web para gerenciar o PostgreSQL (opcional)
 
 ## Fluxo de Inicialização
 
 1. PostgreSQL inicia e aguarda estar pronto (healthcheck)
-2. Serviço de migrations aguarda PostgreSQL estar saudável
-3. Migrations são executadas automaticamente
-4. Aplicação principal aguarda migrations serem concluídas
-5. Aplicação inicia e fica disponível na porta 3000
+2. RabbitMQ inicia e aguarda estar pronto (healthcheck)
+3. Serviço de migrations aguarda PostgreSQL estar saudável
+4. Migrations são executadas automaticamente
+5. Aplicação principal aguarda migrations serem concluídas E RabbitMQ estar saudável
+6. Aplicação inicia e fica disponível na porta 3000
 
 ## Como usar
 
@@ -32,6 +33,13 @@ docker compose up -d
 
 ```bash
 docker compose up -d postgres rabbitmq pgadmin
+```
+
+### Iniciar com script de limpeza
+
+```bash
+# Usar o script de inicialização limpa
+./scripts/start-clean.sh
 ```
 
 ### Executar apenas as migrations
@@ -70,7 +78,15 @@ As seguintes variáveis de ambiente são configuradas automaticamente:
 
 - `DATABASE_URL`: String de conexão com PostgreSQL
 - `RABBITMQ_URL`: String de conexão com RabbitMQ
+- `RABBITMQ_EXCHANGE`: Nome do exchange para eventos (events)
+- `RABBITMQ_HEARTBEAT`: Heartbeat da conexão (60)
+- `RABBITMQ_RECONNECT_ATTEMPTS`: Tentativas de reconexão (5)
+- `RABBITMQ_RECONNECT_DELAY`: Delay entre tentativas (5000ms)
 - `PORT`: Porta da aplicação (3000)
+- `NODE_ENV`: Ambiente de execução (production)
+- `EVENTS_ENABLE_RETRY`: Habilita retry automático (true)
+- `EVENTS_RETRY_ATTEMPTS`: Número de tentativas de retry (3)
+- `EVENTS_RETRY_DELAY`: Delay entre tentativas (5000ms)
 
 ## Portas Expostas
 
