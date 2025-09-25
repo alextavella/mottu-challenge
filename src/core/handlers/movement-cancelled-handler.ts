@@ -1,4 +1,4 @@
-import { ServerError, throwServerError } from '@/domain/errors/server.error';
+import { ServerError } from '@/domain/errors/server.error';
 import { IEventHandler } from '@/infra/events/types';
 import z from 'zod';
 import { MovementEvent } from '../events/movement-event';
@@ -23,8 +23,13 @@ export class MovementCancelledHandler implements IEventHandler<MovementEvent> {
 
     const { id: movementId } = result.data;
 
-    await this.cancelMovementUseCase
-      .execute({ movementId })
-      .catch(throwServerError(`Failed to cancel movement ${event.data.id}`));
+    try {
+      await this.cancelMovementUseCase.execute({ movementId });
+    } catch (error) {
+      throw new ServerError(
+        `Failed to cancel movement ${event.data.id}`,
+        error as Error,
+      );
+    }
   }
 }
