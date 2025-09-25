@@ -68,7 +68,7 @@ export async function setupEventConsumers(eventManager: IEventManager) {
       routingKey: MovementEventType.CREATED,
       prefetch: 1,
       retryAttempts: 3,
-      retryDelay: 1000,
+      retryDelay: 5000,
     },
   );
 

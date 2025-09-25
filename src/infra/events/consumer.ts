@@ -37,7 +37,7 @@ export class RabbitMQEventConsumer {
       routingKey: options.routingKey || eventType,
       prefetch: options.prefetch || 10,
       retryAttempts: options.retryAttempts || 3,
-      retryDelay: options.retryDelay || 1000,
+      retryDelay: options.retryDelay || 5000,
       deadLetterExchange: options.deadLetterExchange || this.exchangeName,
     };
 
@@ -89,19 +89,36 @@ export class RabbitMQEventConsumer {
     this.logger.info('Event consumer started');
   }
 
-  private async startConsumer(
-    eventType: string,
-    consumer: ConsumerRegistration,
+  private async cleanupQueues(
+    queueMain: string,
+    queueRetry: string,
+    queueDLQ: string,
   ): Promise<void> {
-    if (!this.channel) {
-      throw new Error('Consumer channel not initialized');
+    if (!this.channel) return;
+
+    try {
+      // Tentar deletar filas existentes (ignorar erros se não existirem)
+      await this.channel.deleteQueue(queueMain, { ifEmpty: false });
+      await this.channel.deleteQueue(queueRetry, { ifEmpty: false });
+      await this.channel.deleteQueue(queueDLQ, { ifEmpty: false });
+      this.logger.info(
+        `Cleaned up existing queues: ${queueMain}, ${queueRetry}, ${queueDLQ}`,
+      );
+    } catch (error: any) {
+      // Ignorar erros de filas que não existem
+      if (error.code !== 404) {
+        this.logger.warn(`Error cleaning up queues: ${error.message}`);
+      }
     }
+  }
 
-    const { handler, options } = consumer;
-
-    const queueMain = options.queue;
-    const queueRetry = `${queueMain}.retry`;
-    const queueDLQ = `${queueMain}.dlq`;
+  private async createQueues(
+    queueMain: string,
+    queueRetry: string,
+    queueDLQ: string,
+    options: Required<ConsumerOptions>,
+  ): Promise<void> {
+    if (!this.channel) return;
 
     // Fila principal -> retry em caso de falha
     await this.channel.assertQueue(queueMain, {
@@ -127,11 +144,35 @@ export class RabbitMQEventConsumer {
       durable: true,
     });
 
+    this.logger.info(
+      `Created queues: ${queueMain}, ${queueRetry}, ${queueDLQ}`,
+    );
+  }
+
+  private async startConsumer(
+    eventType: string,
+    consumer: ConsumerRegistration,
+  ): Promise<void> {
+    if (!this.channel) {
+      throw new Error('Consumer channel not initialized');
+    }
+
+    const { handler, options } = consumer;
+
+    const queueMain = options.queue;
+    const queueRetry = `${queueMain}.retry`;
+    const queueDLQ = `${queueMain}.dlq`;
+
+    // Sempre limpar filas existentes primeiro para evitar conflitos
+    await this.cleanupQueues(queueMain, queueRetry, queueDLQ);
+
+    // Criar filas com configuração correta
+    await this.createQueues(queueMain, queueRetry, queueDLQ, options);
+
     // Garantir que a exchange existe antes de fazer bind
     await this.channel.assertExchange(options.exchange, 'topic', {
       durable: true,
     });
-    this.logger.info(`[DEBUG] Exchange ${options.exchange} created/verified`);
 
     // Bind filas ao exchange
     await this.channel.bindQueue(
@@ -139,21 +180,12 @@ export class RabbitMQEventConsumer {
       options.exchange,
       options.routingKey,
     );
-    this.logger.info(
-      `[DEBUG] Bound queue ${queueMain} to exchange ${options.exchange} with routing key ${options.routingKey}`,
-    );
 
     // Bind fila de retry ao exchange
     await this.channel.bindQueue(queueRetry, options.exchange, queueRetry);
-    this.logger.info(
-      `[DEBUG] Bound retry queue ${queueRetry} to exchange ${options.exchange} with routing key ${queueRetry}`,
-    );
 
     // Bind fila DLQ ao exchange
     await this.channel.bindQueue(queueDLQ, options.exchange, queueDLQ);
-    this.logger.info(
-      `[DEBUG] Bound DLQ ${queueDLQ} to exchange ${options.exchange} with routing key ${queueDLQ}`,
-    );
 
     await this.channel.prefetch(options.prefetch);
 

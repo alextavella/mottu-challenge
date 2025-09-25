@@ -39,13 +39,31 @@ export class EventManager implements IEventManager {
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    try {
-      await this.connection.connect();
-      this.logger.info('Event Manager initialized successfully');
-      this.isInitialized = true;
-    } catch (error) {
-      this.logger.error('Failed to initialize Event Manager:', error);
-      throw error;
+    const maxRetries = 5;
+    let retries = 0;
+
+    while (retries < maxRetries) {
+      try {
+        await this.connection.connect();
+        this.logger.info('Event Manager initialized successfully');
+        this.isInitialized = true;
+        return;
+      } catch (error) {
+        retries++;
+        this.logger.warn(
+          `Failed to initialize Event Manager (attempt ${retries}/${maxRetries}): ${error}`,
+        );
+
+        if (retries >= maxRetries) {
+          this.logger.error(
+            'Failed to initialize Event Manager after all retries',
+          );
+          throw error;
+        }
+
+        // Wait before retry
+        await new Promise((resolve) => setTimeout(resolve, 2000 * retries));
+      }
     }
   }
 
@@ -77,7 +95,7 @@ export class EventManager implements IEventManager {
     // Apply default retry options if enabled
     const consumerOptions: ConsumerOptions = {
       retryAttempts: this.options.retryAttempts || 3,
-      retryDelay: this.options.retryDelay || 1000,
+      retryDelay: this.options.retryDelay || 5000,
       ...options,
     };
 

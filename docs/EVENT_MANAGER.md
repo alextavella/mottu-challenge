@@ -76,7 +76,7 @@ await eventManager.subscribe(MovementEventType.CREATED, ledgerHandler, {
   queue: 'ledger.movement.created',
   prefetch: 5,
   retryAttempts: 3,
-  retryDelay: 2000,
+  retryDelay: 5000,
 });
 
 // Iniciar consumo
