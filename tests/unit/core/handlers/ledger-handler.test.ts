@@ -2,18 +2,16 @@ import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { LedgerLogHandler } from '@/core/handlers/ledger-handler';
 import type { ILedgerLogRepository } from '@/domain/contracts/repositories/ledger-log-repository';
 import { MovementStatus, MovementType } from '@prisma/client';
+import { createLedgerLogRepositoryMock } from 'tests/mocks/core/repositories/ledger-log-repository.mock';
+import { vi } from 'vitest';
 
 describe('LedgerLogHandler', () => {
   let handler: LedgerLogHandler;
   let mockRepository: ILedgerLogRepository;
-  let mockLedgerLogCreate: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRepository = {
-      create: vi.fn(),
-    } as unknown as ILedgerLogRepository;
-    mockLedgerLogCreate = mockRepository.create as unknown as any;
+    mockRepository = createLedgerLogRepositoryMock();
     handler = new LedgerLogHandler(mockRepository);
   });
 
@@ -36,11 +34,11 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      mockLedgerLogCreate.mockResolvedValueOnce({} as any);
+      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
 
       await handler.handle(movementEvent);
 
-      expect(mockLedgerLogCreate).toHaveBeenCalledWith({
+      expect(mockRepository.create).toHaveBeenCalledWith({
         movementId: '550e8400-e29b-41d4-a716-446655440002',
         accountId: '550e8400-e29b-41d4-a716-446655440003',
         type: MovementType.CREDIT,
@@ -66,11 +64,11 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      mockLedgerLogCreate.mockResolvedValueOnce({} as any);
+      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
 
       await handler.handle(movementEvent);
 
-      expect(mockLedgerLogCreate).toHaveBeenCalledWith({
+      expect(mockRepository.create).toHaveBeenCalledWith({
         movementId: '550e8400-e29b-41d4-a716-446655440005',
         accountId: '550e8400-e29b-41d4-a716-446655440006',
         type: MovementType.DEBIT,
@@ -97,7 +95,7 @@ describe('LedgerLogHandler', () => {
       };
 
       const dbError = new Error('Database connection failed');
-      mockLedgerLogCreate.mockRejectedValueOnce(dbError);
+      vi.mocked(mockRepository.create).mockRejectedValueOnce(dbError);
 
       await expect(handler.handle(movementEvent)).rejects.toThrow(
         `Failed to create ledger log for movement 550e8400-e29b-41d4-a716-446655440008`,
@@ -121,11 +119,11 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      mockLedgerLogCreate.mockResolvedValueOnce({} as any);
+      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
 
       await handler.handle(movementEvent);
 
-      expect(mockLedgerLogCreate).toHaveBeenCalledWith(
+      expect(mockRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: movementEvent.data }),
       );
     });
@@ -147,11 +145,11 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      mockLedgerLogCreate.mockResolvedValueOnce({} as any);
+      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
 
       await handler.handle(movementEvent);
 
-      expect(mockLedgerLogCreate).toHaveBeenCalledWith(
+      expect(mockRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ amount: 0 }),
       );
     });
@@ -174,7 +172,7 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      mockLedgerLogCreate.mockResolvedValueOnce({} as any);
+      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
 
       await expect(handler.handle(movementEvent)).resolves.not.toThrow();
     });

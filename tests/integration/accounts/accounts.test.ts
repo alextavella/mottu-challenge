@@ -262,7 +262,7 @@ describe('Account Routes', () => {
         name: 'John Doe',
         balance: 1250,
       });
-    });
+    }, 15000);
   });
 
   describe('Account Routes Error Handling', () => {

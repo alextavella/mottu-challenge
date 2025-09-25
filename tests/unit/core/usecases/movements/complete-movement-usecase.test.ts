@@ -8,6 +8,10 @@ import { AccountNotFoundError } from '@/domain/errors/account.errors';
 import { MovementNotFoundError } from '@/domain/errors/movement.errors';
 import { IEventManager } from '@/infra/events/types';
 import { MovementStatus, MovementType } from '@prisma/client';
+import { createAccountRepositoryMock } from 'tests/mocks/core/repositories/account-repository.mock';
+import { createBalanceRepositoryMock } from 'tests/mocks/core/repositories/balance-repository.mock';
+import { createMovementRepositoryMock } from 'tests/mocks/core/repositories/movement-repository.mock';
+import { createEventManagerMock } from 'tests/mocks/infra/events/event-system.mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock EventFactory
@@ -36,32 +40,10 @@ describe('CompleteMovementUseCase', () => {
   let mockEventManager: IEventManager;
 
   beforeEach(() => {
-    mockAccountRepository = {
-      findById: vi.fn(),
-      findByDocumentOrEmail: vi.fn(),
-      create: vi.fn(),
-      getBalance: vi.fn(),
-    };
-
-    mockBalanceRepository = {
-      updateBalance: vi.fn(),
-    };
-
-    mockMovementRepository = {
-      create: vi.fn(),
-      findById: vi.fn(),
-      updateStatus: vi.fn(),
-      findByAccountId: vi.fn(),
-    };
-
-    mockEventManager = {
-      publish: vi.fn(),
-      publishBatch: vi.fn(),
-      subscribe: vi.fn(),
-      startConsumer: vi.fn(),
-      stopConsumer: vi.fn(),
-      isConnected: vi.fn().mockReturnValue(true),
-    };
+    mockAccountRepository = createAccountRepositoryMock();
+    mockBalanceRepository = createBalanceRepositoryMock();
+    mockMovementRepository = createMovementRepositoryMock();
+    mockEventManager = createEventManagerMock();
 
     useCase = new CompleteMovementUseCase(
       mockAccountRepository,
