@@ -22,7 +22,7 @@ export class EventManager implements IEventManager {
     private logger: ILogger,
     private options: EventManagerOptions,
   ) {
-    this.connection = new RabbitMQConnection(options.connection);
+    this.connection = new RabbitMQConnection(options.connection, logger);
     const exchangeName = options.defaultExchange || 'events';
     this.publisher = new RabbitMQEventPublisher(
       this.logger,
@@ -96,6 +96,17 @@ export class EventManager implements IEventManager {
     await this.consumer.start();
   }
 
+  async setDLQHandler<T extends BaseEvent>(
+    eventType: EventType,
+    dlqHandler: IEventHandler<T>,
+  ): Promise<void> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    await this.consumer.setDLQHandler(eventType, dlqHandler);
+  }
+
   async stopConsumer(): Promise<void> {
     await this.consumer.stop();
   }
@@ -132,7 +143,7 @@ function createEventManagerOptions(): EventManagerOptions {
     defaultExchange: env.RABBITMQ_EXCHANGE || 'events',
     enableRetry: env.EVENTS_ENABLE_RETRY,
     retryAttempts: env.EVENTS_RETRY_ATTEMPTS || 3,
-    retryDelay: env.EVENTS_RETRY_DELAY || 1000,
+    retryDelay: env.EVENTS_RETRY_DELAY || 5000,
   };
 }
 

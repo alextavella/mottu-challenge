@@ -50,6 +50,10 @@ export class RabbitMQEventPublisher implements IEventPublisher {
     };
 
     try {
+      this.logger.info(
+        `[DEBUG] Publishing event: ${event.type} with routing key: ${routingKey} to exchange: ${this.exchangeName}`,
+      );
+
       const published = channel.publish(
         this.exchangeName,
         routingKey,
@@ -61,7 +65,9 @@ export class RabbitMQEventPublisher implements IEventPublisher {
         throw new Error('Failed to publish event: channel buffer full');
       }
 
-      this.logger.info(`Event published: ${event.type} with ID ${event.id}`);
+      this.logger.info(
+        `[DEBUG] Event published successfully: ${event.type} with ID ${event.id}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to publish event ${event.id}:`, error);
       throw error;

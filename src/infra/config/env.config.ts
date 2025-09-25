@@ -14,7 +14,7 @@ const envSchema = z.object({
   RABBITMQ_HEARTBEAT: z.coerce.number().default(60),
   EVENTS_ENABLE_RETRY: z.coerce.boolean().default(true),
   EVENTS_RETRY_ATTEMPTS: z.coerce.number().default(3),
-  EVENTS_RETRY_DELAY: z.coerce.number().default(1000),
+  EVENTS_RETRY_DELAY: z.coerce.number().default(5000),
 });
 
 export const env = envSchema.parse(process.env);
