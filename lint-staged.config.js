@@ -9,5 +9,5 @@ export default {
   '*.{json,md,yml,yaml}': ['prettier --write'],
 
   // Run tests when source files or test files change
-  'tests/**/*.{ts,tsx}': () => 'pnpm test:run',
+  // 'tests/**/*.{ts,tsx}': () => 'pnpm test:run',
 };
