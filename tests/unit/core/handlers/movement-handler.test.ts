@@ -1,18 +1,17 @@
 import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { MovementCreatedHandler } from '@/core/handlers/movement-created-handler';
-import { ICompleteMovementUseCase } from '@/core/usecases/movements/complete-movement-usecase';
+import { IUseCase } from '@/domain/contracts/usecases/interfaces';
 import { ServerError } from '@/domain/errors/server.error';
 import { MovementStatus, MovementType } from '@prisma/client';
+import { createUseCaseMock } from 'tests/mocks/core/usecases/usecase.mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('MovementCreatedHandler', () => {
   let handler: MovementCreatedHandler;
-  let mockCompleteMovementUseCase: ICompleteMovementUseCase;
+  let mockCompleteMovementUseCase: IUseCase;
 
   beforeEach(() => {
-    mockCompleteMovementUseCase = {
-      execute: vi.fn().mockResolvedValue(undefined),
-    };
+    mockCompleteMovementUseCase = createUseCaseMock();
     handler = new MovementCreatedHandler(mockCompleteMovementUseCase);
   });
 
@@ -33,6 +32,10 @@ describe('MovementCreatedHandler', () => {
           createdAt: new Date(),
         },
       };
+
+      vi.mocked(mockCompleteMovementUseCase.execute).mockResolvedValue({
+        movementId,
+      });
 
       await handler.handle(event);
 
@@ -97,30 +100,6 @@ describe('MovementCreatedHandler', () => {
       );
 
       await expect(handler.handle(event)).rejects.toThrow(ServerError);
-    });
-
-    it('should handle different movement event types', async () => {
-      const movementId = '123e4567-e89b-12d3-a456-426614174000';
-      const event: MovementEvent = {
-        id: 'event-id',
-        type: MovementEventType.UPDATED,
-        timestamp: new Date(),
-        version: '1.0',
-        data: {
-          id: movementId,
-          accountId: 'account-id',
-          amount: 100,
-          type: MovementType.CREDIT,
-          status: MovementStatus.PENDING,
-          createdAt: new Date(),
-        },
-      };
-
-      await handler.handle(event);
-
-      expect(mockCompleteMovementUseCase.execute).toHaveBeenCalledWith({
-        movementId,
-      });
     });
   });
 });

@@ -1,13 +1,14 @@
 import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { MovementCancelledHandler } from '@/core/handlers/movement-cancelled-handler';
-import { ICancelMovementUseCase } from '@/core/usecases/movements/cancel-movement-usecase';
+import { IUseCase } from '@/domain/contracts/usecases/interfaces';
 import { ServerError } from '@/domain/errors/server.error';
 import { MovementStatus, MovementType } from '@prisma/client';
+import { createUseCaseMock } from 'tests/mocks/core/usecases/usecase.mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('MovementCancelledHandler', () => {
   let movementCancelledHandler: MovementCancelledHandler;
-  let mockCancelMovementUseCase: ICancelMovementUseCase;
+  let mockCancelMovementUseCase: IUseCase;
 
   const mockMovementEvent: MovementEvent = {
     id: 'event-123',
@@ -27,10 +28,7 @@ describe('MovementCancelledHandler', () => {
   };
 
   beforeEach(() => {
-    mockCancelMovementUseCase = {
-      execute: vi.fn(),
-    } as any;
-
+    mockCancelMovementUseCase = createUseCaseMock();
     movementCancelledHandler = new MovementCancelledHandler(
       mockCancelMovementUseCase,
     );

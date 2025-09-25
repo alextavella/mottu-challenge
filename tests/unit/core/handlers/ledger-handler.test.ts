@@ -1,18 +1,18 @@
 import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { LedgerLogHandler } from '@/core/handlers/ledger-handler';
-import type { ILedgerLogRepository } from '@/domain/contracts/repositories/ledger-log-repository';
+import { IUseCase } from '@/domain/contracts/usecases/interfaces';
 import { MovementStatus, MovementType } from '@prisma/client';
-import { createLedgerLogRepositoryMock } from 'tests/mocks/core/repositories/ledger-log-repository.mock';
+import { createUseCaseMock } from 'tests/mocks/core/usecases/usecase.mock';
 import { vi } from 'vitest';
 
 describe('LedgerLogHandler', () => {
   let handler: LedgerLogHandler;
-  let mockRepository: ILedgerLogRepository;
+  let mockCreateLedgerLogUseCase: IUseCase;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRepository = createLedgerLogRepositoryMock();
-    handler = new LedgerLogHandler(mockRepository);
+    mockCreateLedgerLogUseCase = createUseCaseMock();
+    handler = new LedgerLogHandler(mockCreateLedgerLogUseCase);
   });
 
   describe('handle', () => {
@@ -34,11 +34,13 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
+      vi.mocked(mockCreateLedgerLogUseCase.execute).mockResolvedValueOnce(
+        {} as any,
+      );
 
       await handler.handle(movementEvent);
 
-      expect(mockRepository.create).toHaveBeenCalledWith({
+      expect(mockCreateLedgerLogUseCase.execute).toHaveBeenCalledWith({
         movementId: '550e8400-e29b-41d4-a716-446655440002',
         accountId: '550e8400-e29b-41d4-a716-446655440003',
         type: MovementType.CREDIT,
@@ -64,11 +66,13 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
+      vi.mocked(mockCreateLedgerLogUseCase.execute).mockResolvedValueOnce(
+        {} as any,
+      );
 
       await handler.handle(movementEvent);
 
-      expect(mockRepository.create).toHaveBeenCalledWith({
+      expect(mockCreateLedgerLogUseCase.execute).toHaveBeenCalledWith({
         movementId: '550e8400-e29b-41d4-a716-446655440005',
         accountId: '550e8400-e29b-41d4-a716-446655440006',
         type: MovementType.DEBIT,
@@ -95,10 +99,12 @@ describe('LedgerLogHandler', () => {
       };
 
       const dbError = new Error('Database connection failed');
-      vi.mocked(mockRepository.create).mockRejectedValueOnce(dbError);
+      vi.mocked(mockCreateLedgerLogUseCase.execute).mockRejectedValueOnce(
+        dbError,
+      );
 
       await expect(handler.handle(movementEvent)).rejects.toThrow(
-        `Failed to create ledger log for movement 550e8400-e29b-41d4-a716-446655440008`,
+        'Failed to create ledger log for movement 550e8400-e29b-41d4-a716-446655440008',
       );
     });
 
@@ -119,11 +125,13 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
+      vi.mocked(mockCreateLedgerLogUseCase.execute).mockResolvedValueOnce(
+        {} as any,
+      );
 
       await handler.handle(movementEvent);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockCreateLedgerLogUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ data: movementEvent.data }),
       );
     });
@@ -145,11 +153,13 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
+      vi.mocked(mockCreateLedgerLogUseCase.execute).mockResolvedValueOnce(
+        {} as any,
+      );
 
       await handler.handle(movementEvent);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockCreateLedgerLogUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ amount: 0 }),
       );
     });
@@ -172,7 +182,9 @@ describe('LedgerLogHandler', () => {
         },
       };
 
-      vi.mocked(mockRepository.create).mockResolvedValueOnce({} as any);
+      vi.mocked(mockCreateLedgerLogUseCase.execute).mockResolvedValueOnce(
+        {} as any,
+      );
 
       await expect(handler.handle(movementEvent)).resolves.not.toThrow();
     });
