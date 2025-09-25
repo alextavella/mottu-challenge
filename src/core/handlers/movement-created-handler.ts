@@ -14,8 +14,6 @@ export class MovementCreatedHandler implements IEventHandler<MovementEvent> {
   ) {}
 
   async handle(event: MovementEvent): Promise<void> {
-    console.log(`Processing movement: ${event.data.id}`);
-
     const result = movementCreatedSchema.safeParse(event.data);
 
     if (!result.success) {
@@ -26,6 +24,8 @@ export class MovementCreatedHandler implements IEventHandler<MovementEvent> {
     }
 
     const { id: movementId } = result.data;
+
+    console.log(`Processing movement: ${movementId}`);
 
     await this.completeMovementUseCase
       .execute({ movementId })
