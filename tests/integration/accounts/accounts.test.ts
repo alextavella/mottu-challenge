@@ -178,14 +178,14 @@ describe('Account Routes', () => {
     });
 
     it('should return 404 for non-existent account', async () => {
-      const nonExistentId = 'non-existent-id';
+      const nonExistentId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
 
       const response = await supertest(app.server)
         .get(`/accounts/${nonExistentId}/balance`)
         .expect(404);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('Not Found');
+      expect(response.body.error).toBe('AccountNotFoundError');
     });
 
     it('should set balance to 1000 by default', async () => {
