@@ -23,10 +23,7 @@ export class MovementRepository implements IMovementRepository {
           description: data.description,
         },
       })
-      .then((movement) => movementSchema.parse(movement))
-      .catch((err) => {
-        throw err;
-      });
+      .then((movement) => movementSchema.parse(movement));
   }
 
   async updateStatus(
