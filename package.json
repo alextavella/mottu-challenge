@@ -28,6 +28,9 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:run": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:fast": "vitest run --reporter=basic --no-coverage",
     "commit": "cz",
     "prepare": "husky"
   },
