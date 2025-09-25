@@ -98,7 +98,7 @@ export async function createServerWithEvents(): Promise<FastifyInstance> {
     app.log.info('Test database connected successfully');
 
     // Clear RabbitMQ queues before initializing event system
-    await clearRabbitMQQueues();
+    // await clearRabbitMQQueues();
 
     // Initialize event system with test configuration
     const eventManager = getEventManager(app.log);

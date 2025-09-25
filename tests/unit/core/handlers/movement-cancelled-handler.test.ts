@@ -2,6 +2,7 @@ import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
 import { MovementCancelledHandler } from '@/core/handlers/movement-cancelled-handler';
 import { ICancelMovementUseCase } from '@/core/usecases/movements/cancel-movement-usecase';
 import { ServerError } from '@/domain/errors/server.error';
+import { MovementStatus, MovementType } from '@prisma/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('MovementCancelledHandler', () => {
@@ -16,9 +17,9 @@ describe('MovementCancelledHandler', () => {
       id: '123e4567-e89b-12d3-a456-426614174000',
       accountId: '123e4567-e89b-12d3-a456-426614174001',
       amount: 100.5,
-      type: 'CREDIT',
+      type: MovementType.CREDIT,
       description: 'Test movement',
-      status: 'CANCELLED',
+      status: MovementStatus.CANCELLED,
       createdAt: new Date('2023-01-01T00:00:00Z'),
     },
     timestamp: new Date('2023-01-01T00:00:00Z'),
@@ -91,7 +92,7 @@ describe('MovementCancelledHandler', () => {
       const eventTypes = [
         MovementEventType.CREATED,
         MovementEventType.UPDATED,
-        MovementEventType.DELETED,
+        MovementEventType.CANCELLED,
       ];
 
       for (const eventType of eventTypes) {
@@ -296,9 +297,9 @@ describe('MovementCancelledHandler', () => {
             id: '123e4567-e89b-12d3-a456-426614174000',
             accountId: '123e4567-e89b-12d3-a456-426614174001',
             amount: 100.5,
-            type: 'CREDIT',
+            type: MovementType.CREDIT,
             description: 'Test movement',
-            status: 'PENDING',
+            status: MovementStatus.PENDING,
             createdAt: new Date('2023-01-01T00:00:00Z'),
           },
           description: 'complete movement data',
@@ -308,8 +309,8 @@ describe('MovementCancelledHandler', () => {
             id: '123e4567-e89b-12d3-a456-426614174000',
             accountId: '123e4567-e89b-12d3-a456-426614174001',
             amount: 200.75,
-            type: 'DEBIT',
-            status: 'COMPLETED',
+            type: MovementType.DEBIT,
+            status: MovementStatus.COMPLETED,
             createdAt: new Date('2023-01-01T00:00:00Z'),
           },
           description: 'movement data without description',
@@ -319,9 +320,9 @@ describe('MovementCancelledHandler', () => {
             id: '123e4567-e89b-12d3-a456-426614174000',
             accountId: '123e4567-e89b-12d3-a456-426614174001',
             amount: 0.01,
-            type: 'CREDIT',
+            type: MovementType.CREDIT,
             description: 'Minimum amount movement',
-            status: 'CANCELLED',
+            status: MovementStatus.CANCELLED,
             createdAt: new Date('2023-01-01T00:00:00Z'),
           },
           description: 'minimum amount movement',

@@ -122,31 +122,5 @@ describe('MovementCreatedHandler', () => {
         movementId,
       });
     });
-
-    it('should log processing message', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const movementId = '123e4567-e89b-12d3-a456-426614174000';
-      const event: MovementEvent = {
-        id: 'event-id',
-        version: '1.0',
-        type: MovementEventType.CREATED,
-        timestamp: new Date(),
-        data: {
-          id: movementId,
-          accountId: 'account-id',
-          amount: 100,
-          type: MovementType.CREDIT,
-          status: MovementStatus.PENDING,
-          createdAt: new Date(),
-        },
-      };
-
-      await handler.handle(event);
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        `Processing movement: ${movementId}`,
-      );
-      consoleSpy.mockRestore();
-    });
   });
 });

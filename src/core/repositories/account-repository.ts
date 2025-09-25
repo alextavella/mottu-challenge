@@ -7,17 +7,6 @@ import { PrismaClient } from '@prisma/client';
 
 export class AccountRepository implements IAccountRepository {
   constructor(private readonly prisma: PrismaClient) {}
-  updateBalance(): Promise<{
-    id: string;
-    name: string;
-    document: string;
-    email: string;
-    balance: number;
-    createdAt: Date;
-    updatedAt: Date;
-  }> {
-    throw new Error('Method not implemented.');
-  }
 
   async create(data: CreateAccountData): Promise<AccountData> {
     return await this.prisma.account
@@ -59,6 +48,6 @@ export class AccountRepository implements IAccountRepository {
       select: { balance: true },
     });
 
-    return account ? accountSchema.parse(account).balance : null;
+    return account ? Number(account.balance) : null;
   }
 }

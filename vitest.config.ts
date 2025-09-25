@@ -10,9 +10,12 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
     },
-    // Debug configuration
+    // Performance optimizations
+    bail: 1,
+    logHeapUsage: false,
     inspectBrk: false,
-    fileParallelism: false,
+    fileParallelism: true, // Enable file parallelism
+    maxConcurrency: 5, // Limit concurrent tests
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -31,8 +34,8 @@ export default defineConfig({
         '**/migrations/',
       ],
     },
-    testTimeout: 10000,
-    hookTimeout: 10000,
+    testTimeout: 5000, // Reduced from 10s to 5s
+    hookTimeout: 5000, // Reduced from 10s to 5s
     // Configure projects with proper inheritance
     projects: [
       {
@@ -44,6 +47,13 @@ export default defineConfig({
             color: 'blue',
           },
           include: ['tests/unit/**/*.test.ts'],
+          // Unit tests can run in parallel
+          pool: 'threads',
+          poolOptions: {
+            threads: {
+              singleThread: false,
+            },
+          },
         },
       },
       {
@@ -55,13 +65,15 @@ export default defineConfig({
             color: 'green',
           },
           include: ['tests/integration/**/*.test.ts'],
-          // Run integration tests sequentially to avoid database conflicts
+          // Integration tests with controlled parallelism
           pool: 'threads',
           poolOptions: {
             threads: {
               singleThread: true,
             },
           },
+          testTimeout: 10000, // Keep higher timeout for integration tests
+          hookTimeout: 10000,
         },
       },
     ],

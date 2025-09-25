@@ -14,28 +14,31 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// Setup test database
+// Global database setup flag
+let isDatabaseSetup = false;
+
+// Setup test database (only once)
 beforeAll(async () => {
   // Ensure test environment is set
   process.env.NODE_ENV = 'test';
 
-  console.log('Setting up test database:', process.env.DATABASE_URL);
-
-  try {
-    execSync('npx prisma db push --accept-data-loss', {
-      stdio: 'inherit',
-      env: { ...process.env },
-    });
-    console.log('Test database setup completed');
-  } catch (error) {
-    console.warn(
-      'Failed to setup test database (this is ok if DB is not running):',
-      error,
-    );
+  if (!isDatabaseSetup) {
+    try {
+      execSync('npx prisma db push --accept-data-loss', {
+        stdio: 'inherit',
+        env: { ...process.env },
+      });
+      isDatabaseSetup = true;
+    } catch (error) {
+      console.warn(
+        'Failed to setup test database (this is ok if DB is not running):',
+        error,
+      );
+    }
   }
 });
 
-// Clean database before each test
+// Clean database before each test (optimized)
 beforeEach(async () => {
   // Skip database cleanup for unit tests - they should be mocked
   // Integration tests will handle their own cleanup

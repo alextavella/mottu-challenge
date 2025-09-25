@@ -3,6 +3,6 @@ import { getAccountBalance } from '@/http/controllers/accounts/get-account-balan
 import type { FastifyInstance } from 'fastify';
 
 export async function accountRoutes(fastify: FastifyInstance) {
-  await fastify.register(createAccount, { prefix: '/v1' });
-  await fastify.register(getAccountBalance, { prefix: '/v1' });
+  await fastify.register(createAccount);
+  await fastify.register(getAccountBalance);
 }

@@ -15,7 +15,8 @@ describe('MovementRepository', () => {
         findUnique: vi.fn(),
         findMany: vi.fn(),
       },
-    };
+    } as any;
+
     repository = new MovementRepository(mockPrisma);
   });
 
@@ -35,7 +36,7 @@ describe('MovementRepository', () => {
         createdAt: new Date(),
       };
 
-      mockPrisma.movement.create.mockResolvedValue(createdMovement);
+      vi.mocked(mockPrisma.movement.create).mockResolvedValue(createdMovement);
 
       const result = await repository.create(createData);
 
@@ -66,7 +67,7 @@ describe('MovementRepository', () => {
         createdAt: new Date(),
       };
 
-      mockPrisma.movement.create.mockResolvedValue(createdMovement);
+      vi.mocked(mockPrisma.movement.create).mockResolvedValue(createdMovement);
 
       await repository.create(createData);
 
@@ -93,7 +94,7 @@ describe('MovementRepository', () => {
         createdAt: new Date(),
       };
 
-      mockPrisma.movement.update.mockResolvedValue(updatedMovement);
+      vi.mocked(mockPrisma.movement.update).mockResolvedValue(updatedMovement);
 
       const result = await repository.updateStatus(movementId, newStatus);
 
@@ -124,7 +125,9 @@ describe('MovementRepository', () => {
           createdAt: new Date(),
         };
 
-        mockPrisma.movement.update.mockResolvedValue(updatedMovement);
+        vi.mocked(mockPrisma.movement.update).mockResolvedValue(
+          updatedMovement,
+        );
 
         const result = await repository.updateStatus(movementId, status);
 
@@ -146,7 +149,7 @@ describe('MovementRepository', () => {
         createdAt: new Date(),
       };
 
-      mockPrisma.movement.findUnique.mockResolvedValue(movement);
+      vi.mocked(mockPrisma.movement.findUnique).mockResolvedValue(movement);
 
       const result = await repository.findById(movementId);
 
@@ -160,7 +163,7 @@ describe('MovementRepository', () => {
     it('should return null when movement not found', async () => {
       const movementId = 'non-existent-id';
 
-      mockPrisma.movement.findUnique.mockResolvedValue(null);
+      vi.mocked(mockPrisma.movement.findUnique).mockResolvedValue(null);
 
       const result = await repository.findById(movementId);
 
@@ -192,7 +195,7 @@ describe('MovementRepository', () => {
         },
       ];
 
-      mockPrisma.movement.findMany.mockResolvedValue(movements);
+      vi.mocked(mockPrisma.movement.findMany).mockResolvedValue(movements);
 
       const result = await repository.findByAccountId(accountId);
 
@@ -208,7 +211,7 @@ describe('MovementRepository', () => {
       const accountId = '123e4567-e89b-12d3-a456-426614174001';
       const type = MovementType.CREDIT;
 
-      mockPrisma.movement.findMany.mockResolvedValue([]);
+      vi.mocked(mockPrisma.movement.findMany).mockResolvedValue([]);
 
       await repository.findByAccountId(accountId, { type });
 
@@ -223,7 +226,7 @@ describe('MovementRepository', () => {
       const dateFrom = new Date('2023-01-01');
       const dateTo = new Date('2023-12-31');
 
-      mockPrisma.movement.findMany.mockResolvedValue([]);
+      vi.mocked(mockPrisma.movement.findMany).mockResolvedValue([]);
 
       await repository.findByAccountId(accountId, { dateFrom, dateTo });
 
@@ -244,7 +247,7 @@ describe('MovementRepository', () => {
       const limit = 10;
       const offset = 20;
 
-      mockPrisma.movement.findMany.mockResolvedValue([]);
+      vi.mocked(mockPrisma.movement.findMany).mockResolvedValue([]);
 
       await repository.findByAccountId(accountId, { limit, offset });
 
@@ -261,7 +264,7 @@ describe('MovementRepository', () => {
       const orderBy = 'amount';
       const orderDirection = 'asc';
 
-      mockPrisma.movement.findMany.mockResolvedValue([]);
+      vi.mocked(mockPrisma.movement.findMany).mockResolvedValue([]);
 
       await repository.findByAccountId(accountId, { orderBy, orderDirection });
 
@@ -281,7 +284,7 @@ describe('MovementRepository', () => {
       const orderBy = 'amount';
       const orderDirection = 'desc';
 
-      mockPrisma.movement.findMany.mockResolvedValue([]);
+      vi.mocked(mockPrisma.movement.findMany).mockResolvedValue([]);
 
       await repository.findByAccountId(accountId, {
         type,

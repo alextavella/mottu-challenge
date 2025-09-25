@@ -1,7 +1,7 @@
 #!/bin/bash
 # Teste único para validar race conditions
 
-BASE_URL="http://localhost:3000/v1"
+BASE_URL="http://localhost:3000"
 
 echo "🧪 Teste de Race Condition - Sistema de Movimentação Financeira"
 
