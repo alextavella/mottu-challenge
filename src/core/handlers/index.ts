@@ -1,13 +1,6 @@
-import {
-  getAccountRepository,
-  getBalanceRepository,
-  getLedgerLogRepository,
-  getMovementRepository,
-} from '@/infra/container/dependency-injection.container';
 import { IEventManager } from '@/infra/events/types';
 import { MovementEventType } from '../events/movement-event';
-import { CancelMovementUseCase } from '../usecases/movements/cancel-movement-usecase';
-import { CompleteMovementUseCase } from '../usecases/movements/complete-movement-usecase';
+import { UseCaseContainer } from '../usecases/container/usecase.container';
 import { LedgerLogHandler } from './ledger-handler';
 import { MovementCancelledHandler } from './movement-cancelled-handler';
 import { MovementCreatedHandler } from './movement-created-handler';
@@ -24,28 +17,13 @@ export const ALL_DLQ_QUEUES = Object.values(QUEUES).map(
 );
 
 export async function setupEventConsumers(eventManager: IEventManager) {
-  // Get account repository
-  const accountRepository = getAccountRepository();
-  const balanceRepository = getBalanceRepository();
-  const movementRepository = getMovementRepository();
-  const ledgerLogRepository = getLedgerLogRepository();
-
-  // Get complete movement use case
-  const completeMovementUseCase = new CompleteMovementUseCase(
-    accountRepository,
-    balanceRepository,
-    movementRepository,
-    eventManager,
-  );
-
-  // Get cancel movement use case
-  const cancelMovementUseCase = new CancelMovementUseCase(
-    movementRepository,
-    eventManager,
-  );
+  const container = UseCaseContainer.getInstance(eventManager);
+  const completeMovementUseCase = container.getCompleteMovementUsecase();
+  const cancelMovementUseCase = container.getCancelMovementUsecase();
+  const ledgerLogUseCase = container.getCreateLedgerLogUsecase();
 
   // Subscribe to movement events with ledger logging
-  const ledgerHandler = new LedgerLogHandler(ledgerLogRepository);
+  const ledgerHandler = new LedgerLogHandler(ledgerLogUseCase);
   const movementCreatedHandler = new MovementCreatedHandler(
     completeMovementUseCase,
   );
