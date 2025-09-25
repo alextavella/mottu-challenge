@@ -2,14 +2,13 @@ import { EventFactory } from '@/core/events';
 import { MovementEventType } from '@/core/events/movement-event';
 import { IMovementRepository } from '@/domain/contracts/repositories/movement-repository';
 import { IUseCase } from '@/domain/contracts/usecases/interfaces';
-import {
-  MovementData,
-  MovementStatus,
-} from '@/domain/entities/movement.entity';
+import { MovementStatus } from '@/domain/entities/movement.entity';
 import { MovementNotFoundError } from '@/domain/errors/movement.errors';
 import { IEventManager } from '@/infra/events/types';
 
-type Input = MovementData;
+type Input = {
+  movementId: string;
+};
 type Output = {
   movementId: string;
 };
@@ -23,7 +22,7 @@ export class CancelMovementUseCase implements ICancelMovementUseCase {
   ) {}
 
   async execute(input: Input): Promise<Output> {
-    const { id: movementId } = input;
+    const { movementId } = input;
 
     // Find the movement
     const movement = await this.movementRepository

@@ -5,7 +5,7 @@ export enum MovementEventType {
   ALL = 'movement.*',
   CREATED = 'movement.created',
   UPDATED = 'movement.updated',
-  DELETED = 'movement.deleted',
+  CANCELLED = 'movement.cancelled',
 }
 
 export type MovementEvent = BaseEvent<MovementEventType> & {

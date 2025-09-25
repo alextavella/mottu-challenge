@@ -18,8 +18,6 @@ export class LedgerLogHandler implements IEventHandler<MovementEvent> {
   constructor(private readonly ledgerLogRepository: ILedgerLogRepository) {}
 
   async handle(event: MovementEvent): Promise<void> {
-    console.log(`Processing ledger log for movement: ${event.data.id}`);
-
     const ledgerLogData = {
       movementId: event.data.id,
       accountId: event.data.accountId,
