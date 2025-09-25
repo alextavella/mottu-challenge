@@ -37,7 +37,6 @@ export class LedgerLogHandler implements IEventHandler<MovementEvent> {
 
     const ledgerData = result.data;
 
-    // Skip strict validation to keep handler resilient and side-effect only
     await this.ledgerLogRepository
       .create(ledgerData)
       .catch(

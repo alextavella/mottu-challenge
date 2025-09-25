@@ -176,5 +176,27 @@ describe('LedgerLogHandler', () => {
 
       await expect(handler.handle(movementEvent)).resolves.not.toThrow();
     });
+
+    it('should throw ServerError for invalid event data', async () => {
+      const invalidEvent: MovementEvent = {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        type: MovementEventType.CREATED,
+        timestamp: new Date('2024-01-01T00:00:00Z'),
+        version: '1.0',
+        correlationId: '550e8400-e29b-41d4-a716-446655440001',
+        data: {
+          id: 'invalid-uuid', // Invalid UUID
+          accountId: '550e8400-e29b-41d4-a716-446655440003',
+          amount: 100.5,
+          type: MovementType.CREDIT,
+          status: MovementStatus.PENDING,
+          createdAt: new Date('2024-01-01T00:00:00Z'),
+        },
+      };
+
+      await expect(handler.handle(invalidEvent)).rejects.toThrow(
+        'Failed to validate ledger log',
+      );
+    });
   });
 });

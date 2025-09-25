@@ -25,8 +25,6 @@ export class MovementCreatedHandler implements IEventHandler<MovementEvent> {
 
     const { id: movementId } = result.data;
 
-    console.log(`Processing movement: ${movementId}`);
-
     await this.completeMovementUseCase
       .execute({ movementId })
       .catch(throwServerError(`Failed to complete movement ${event.data.id}`));
