@@ -164,7 +164,7 @@ export class RabbitMQEventConsumer {
     const queueDLQ = `${queueMain}.dlq`;
 
     // Sempre limpar filas existentes primeiro para evitar conflitos
-    await this.cleanupQueues(queueMain, queueRetry, queueDLQ);
+    // await this.cleanupQueues(queueMain, queueRetry, queueDLQ);
 
     // Criar filas com configuração correta
     await this.createQueues(queueMain, queueRetry, queueDLQ, options);
