@@ -1,5 +1,5 @@
 import { prisma } from '@/infra/database/client';
-import { MovementType, Prisma } from '@prisma/client';
+import { MovementStatus, MovementType, Prisma } from '@prisma/client';
 import { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import { cleanupTestDatabase } from 'tests/helpers/database-test-helper';
@@ -70,7 +70,7 @@ describe('Movement Routes', () => {
 
       expect(createdMovement).toBeTruthy();
       expect(createdMovement?.amount.toNumber()).toBe(500);
-      expect(createdMovement?.status).toBe('COMPLETED');
+      expect(createdMovement?.status).toBe(MovementStatus.COMPLETED);
 
       // Verify account balance was updated
       const updatedAccount = await prisma.account.findUnique({
@@ -107,7 +107,7 @@ describe('Movement Routes', () => {
 
       expect(createdMovement).toBeTruthy();
       expect(createdMovement?.amount.toNumber()).toBe(300);
-      expect(createdMovement?.status).toBe('COMPLETED');
+      expect(createdMovement?.status).toBe(MovementStatus.COMPLETED);
 
       // Verify account balance was updated
       const updatedAccount = await prisma.account.findUnique({
@@ -248,7 +248,7 @@ describe('Movement Routes', () => {
       });
 
       expect(createdMovement?.amount.toNumber()).toBe(123.45);
-      expect(createdMovement?.status).toBe('COMPLETED');
+      expect(createdMovement?.status).toBe(MovementStatus.COMPLETED);
     });
 
     it('should handle negative amounts by rejecting them', async () => {
