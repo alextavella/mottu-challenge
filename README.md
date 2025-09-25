@@ -66,7 +66,7 @@ RABBITMQ_HEARTBEAT=60
 # Event System
 EVENTS_ENABLE_RETRY=true
 EVENTS_RETRY_ATTEMPTS=3
-EVENTS_RETRY_DELAY=1000
+EVENTS_RETRY_DELAY=5000
 ```
 
 **Configurações do RabbitMQ:**
@@ -81,7 +81,7 @@ EVENTS_RETRY_DELAY=1000
 
 - `EVENTS_ENABLE_RETRY`: Habilita retry automático (padrão: true)
 - `EVENTS_RETRY_ATTEMPTS`: Número de tentativas de retry (padrão: 3)
-- `EVENTS_RETRY_DELAY`: Delay entre tentativas em ms (padrão: 1000)
+- `EVENTS_RETRY_DELAY`: Delay entre tentativas em ms (padrão: 5000)
 
 ### 3. Inicie os serviços com Docker
 
@@ -315,6 +315,6 @@ git commit -m "feat: nova funcionalidade"
 - [x] Implementar integração com RabbitMQ
 - [x] Implementar consumer para LedgerLog
 - [x] Configurar Vitest e testes básicos
-- [ ] Expandir cobertura de testes unitários e de integração
+- [x] Expandir cobertura de testes unitários e de integração
 - [ ] Implementar tratamento de erros e retry
 - [x] Adicionar documentação Swagger

@@ -32,6 +32,7 @@ coverage/
 
 # Optional npm cache directory
 .npm
+.docker
 
 # OS
 .DS*
