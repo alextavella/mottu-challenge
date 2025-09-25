@@ -3,7 +3,7 @@
 
 ### Create movement [CREDIT]
 # @name createMovement
-POST {{baseUrl}}/v1/movements
+POST {{baseUrl}}/movements
 Content-Type: application/json
 
 {
@@ -15,7 +15,7 @@ Content-Type: application/json
 
 ### Create movement [DEBIT]
 # @name createMovement
-POST {{baseUrl}}/v1/movements
+POST {{baseUrl}}/movements
 Content-Type: application/json
 
 {
@@ -26,4 +26,4 @@ Content-Type: application/json
 }
 
 ### Get account balance
-GET {{baseUrl}}/v1/accounts/{{accountId}}/balance
+GET {{baseUrl}}/accounts/{{accountId}}/balance

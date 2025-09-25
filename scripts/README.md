@@ -26,14 +26,14 @@ Scripts para validar race conditions no sistema de movimentação financeira.
 ### Teste Assíncrono (`test-race-condition.sh`)
 
 1. Cria conta de teste com saldo de R$ 1.000,00
-2. Envia 50 saques simultâneos via `POST /v1/movements`
+2. Envia 50 saques simultâneos via `POST /movements`
 3. Usa processamento assíncrono via RabbitMQ
 4. Verifica consistência após processamento
 
 ### Teste Síncrono (`test-race-condition-sync.sh`)
 
 1. Cria conta de teste com saldo de R$ 1.000,00
-2. Envia 50 saques simultâneos via `POST /v1/movements/sync`
+2. Envia 50 saques simultâneos via `POST /movements/sync`
 3. Usa processamento síncrono (sem RabbitMQ)
 4. Verifica consistência imediata
 
@@ -62,8 +62,8 @@ Os testes podem detectar:
 
 ## 🔧 Status dos Endpoints
 
-- ✅ **Assíncrono** (`/v1/movements`): Funcionando
-- ⚠️ **Síncrono** (`/v1/movements/sync`): Em desenvolvimento
+- ✅ **Assíncrono** (`/movements`): Funcionando
+- ⚠️ **Síncrono** (`/movements/sync`): Em desenvolvimento
 - ✅ **Comparação**: Scripts prontos
 
 ## 📝 Notas

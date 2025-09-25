@@ -52,7 +52,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(201);
 
@@ -89,7 +89,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(201);
 
@@ -119,7 +119,7 @@ describe('Movement Routes', () => {
 
     it('should return 400 for invalid request body', async () => {
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send({})
         .expect(400);
 
@@ -148,7 +148,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(incompleteData)
         .expect(400);
 
@@ -172,7 +172,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(400); // BusinessError returns 400, not 404
 
@@ -189,7 +189,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(400);
 
@@ -206,7 +206,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(400); // Validation should reject zero amounts
 
@@ -231,7 +231,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(201);
 
@@ -260,7 +260,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(400);
 
@@ -285,7 +285,7 @@ describe('Movement Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send(movementData)
         .expect(400);
 
@@ -303,7 +303,7 @@ describe('Movement Routes', () => {
   describe('Movement Routes Performance', () => {
     it('should handle sequential movements correctly', async () => {
       // Test sequential movements to avoid connection issues
-      const response1 = await supertest(app.server).post('/v1/movements').send({
+      const response1 = await supertest(app.server).post('/movements').send({
         accountId: testAccountId,
         amount: 100,
         type: MovementType.CREDIT,
@@ -312,7 +312,7 @@ describe('Movement Routes', () => {
 
       expect(response1.status).toBe(201);
 
-      const response2 = await supertest(app.server).post('/v1/movements').send({
+      const response2 = await supertest(app.server).post('/movements').send({
         accountId: testAccountId,
         amount: 50,
         type: MovementType.DEBIT,
@@ -326,7 +326,7 @@ describe('Movement Routes', () => {
 
       // Verify final balance: 1000 + 100 - 50 = 1050
       const response3 = await supertest(app.server).get(
-        `/v1/accounts/${testAccountId}/balance`,
+        `/accounts/${testAccountId}/balance`,
       );
 
       expect(response3.status).toBe(200);
@@ -336,7 +336,7 @@ describe('Movement Routes', () => {
     it('should respond within reasonable time', async () => {
       const startTime = Date.now();
 
-      const response = await supertest(app.server).post('/v1/movements').send({
+      const response = await supertest(app.server).post('/movements').send({
         accountId: testAccountId,
         amount: 25,
         type: MovementType.CREDIT,
@@ -357,7 +357,7 @@ describe('Movement Routes', () => {
   describe('Movement Routes Error Handling', () => {
     it('should return proper error format for validation errors', async () => {
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send({ accountId: 'invalid-uuid', amount: -50, type: 'INVALID' })
         .expect(400);
 
@@ -366,7 +366,7 @@ describe('Movement Routes', () => {
 
     it('should return specific validation errors for invalid UUID', async () => {
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send({
           accountId: 'not-a-uuid',
           amount: 100,
@@ -379,7 +379,7 @@ describe('Movement Routes', () => {
 
     it('should return specific validation errors for invalid amount', async () => {
       const response = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send({
           accountId: testAccountId,
           amount: 0,

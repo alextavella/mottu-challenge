@@ -8,7 +8,7 @@ docker-compose down -v
 
 # Remover todos os volumes relacionados ao projeto
 echo "🗑️ Removendo todos os volumes do projeto..."
-docker volume ls -q | grep desafio-backend-nestjs | xargs -r docker volume rm
+docker volume ls -q | grep mottu-challenge | xargs -r docker volume rm
 
 # Remover containers órfãos
 echo "🧽 Removendo containers órfãos..."

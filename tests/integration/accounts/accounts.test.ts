@@ -40,7 +40,7 @@ describe('Account Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send(accountData)
         .expect(201);
 
@@ -59,7 +59,7 @@ describe('Account Routes', () => {
 
     it('should return 400 for invalid request body', async () => {
       const response = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({})
         .expect(400);
 
@@ -80,7 +80,7 @@ describe('Account Routes', () => {
 
     it('should return 400 for missing document', async () => {
       const response = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({ name: 'John Doe', document: '', email: 'john@example.com' })
         .expect(400);
 
@@ -110,7 +110,7 @@ describe('Account Routes', () => {
 
       // Create first account
       await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send(accountData)
         .expect(201);
 
@@ -122,7 +122,7 @@ describe('Account Routes', () => {
       };
 
       const response = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send(duplicateData)
         .expect(400);
 
@@ -142,7 +142,7 @@ describe('Account Routes', () => {
         };
 
         const response = await supertest(app.server)
-          .post('/v1/accounts')
+          .post('/accounts')
           .send(accountData)
           .expect(201);
 
@@ -155,7 +155,7 @@ describe('Account Routes', () => {
     it('should return account balance successfully', async () => {
       // First create an account
       const createResponse = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({
           name: 'John Doe',
           document: `1234567890${Date.now().toString().slice(-4)}`, // 14 characters - unique document
@@ -167,7 +167,7 @@ describe('Account Routes', () => {
 
       // Get balance
       const response = await supertest(app.server)
-        .get(`/v1/accounts/${accountId}/balance`)
+        .get(`/accounts/${accountId}/balance`)
         .expect(200);
 
       expect(response.body).toMatchObject({
@@ -191,7 +191,7 @@ describe('Account Routes', () => {
     it('should set balance to 1000 by default', async () => {
       // Create account
       const createResponse = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({
           name: 'John Doe',
           document: `1234567890${Date.now().toString().slice(-4)}`, // 14 characters - unique document
@@ -202,7 +202,7 @@ describe('Account Routes', () => {
       const accountId = createResponse.body.accountId;
 
       const response = await supertest(app.server)
-        .get(`/v1/accounts/${accountId}/balance`)
+        .get(`/accounts/${accountId}/balance`)
         .expect(200);
 
       expect(response.body).toMatchObject({
@@ -215,7 +215,7 @@ describe('Account Routes', () => {
     it('should return correct balance after movements', async () => {
       // Create account
       const createResponse = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({
           name: 'John Doe',
           document: `1234567890${Date.now().toString().slice(-4)}`, // 14 characters - unique document
@@ -227,7 +227,7 @@ describe('Account Routes', () => {
 
       // Add some movements using API to ensure proper balance updates
       const creditResponse = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send({
           accountId,
           amount: 500,
@@ -240,7 +240,7 @@ describe('Account Routes', () => {
       await waitForEventProcessing();
 
       const debitResponse = await supertest(app.server)
-        .post('/v1/movements')
+        .post('/movements')
         .send({
           accountId,
           amount: 250,
@@ -254,7 +254,7 @@ describe('Account Routes', () => {
 
       // Get balance
       const response = await supertest(app.server)
-        .get(`/v1/accounts/${accountId}/balance`)
+        .get(`/accounts/${accountId}/balance`)
         .expect(200);
 
       expect(response.body).toMatchObject({
@@ -270,7 +270,7 @@ describe('Account Routes', () => {
       // This test would require mocking database errors
       // For now, we'll test that the error handler middleware works
       const response = await supertest(app.server)
-        .get('/v1/accounts/invalid-uuid-format/balance')
+        .get('/accounts/invalid-uuid-format/balance')
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
@@ -278,7 +278,7 @@ describe('Account Routes', () => {
 
     it('should return proper error format for validation errors', async () => {
       const response = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({ name: '', document: 'abc', email: 'invalid-email' })
         .expect(400);
 
@@ -288,7 +288,7 @@ describe('Account Routes', () => {
     it('should return specific validation errors for each field', async () => {
       // Test empty name
       const emptyNameResponse = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({ name: '', document: '12345678901', email: 'valid@email.com' })
         .expect(400);
 
@@ -300,7 +300,7 @@ describe('Account Routes', () => {
 
       // Test invalid email
       const invalidEmailResponse = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({
           name: 'Valid Name',
           document: '12345678901',
@@ -316,7 +316,7 @@ describe('Account Routes', () => {
 
       // Test short document
       const shortDocResponse = await supertest(app.server)
-        .post('/v1/accounts')
+        .post('/accounts')
         .send({ name: 'Valid Name', document: '123', email: 'valid@email.com' })
         .expect(400);
 

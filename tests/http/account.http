@@ -3,7 +3,7 @@
 
 ### Create account
 # @name createAccount
-POST {{baseUrl}}/v1/accounts
+POST {{baseUrl}}/accounts
 Content-Type: application/json
 
 {
@@ -13,12 +13,12 @@ Content-Type: application/json
 }
 
 ### Get account balance
-GET {{baseUrl}}/v1/accounts/{{accountId}}/balance
+GET {{baseUrl}}/accounts/{{accountId}}/balance
 
 
 ### Create account [invalid request body]
 # @name createAccount
-POST {{baseUrl}}/v1/accounts
+POST {{baseUrl}}/accounts
 Content-Type: application/json
 
 {
