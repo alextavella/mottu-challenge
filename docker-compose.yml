@@ -44,8 +44,16 @@ services:
     ports:
       - '5672:5672' # AMQP port
       - '15672:15672' # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - mini-ledger
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Optional: PgAdmin for database management
   pgadmin:
@@ -84,12 +92,13 @@ services:
       migrations:
         condition: service_completed_successfully
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     networks:
       - mini-ledger
 
 volumes:
   postgres_data:
+  rabbitmq_data:
 
 networks:
   mini-ledger:

@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:3000
-@accountId = bdb942f0-6756-4cdd-8bba-5976384bddcc
+@accountId = 1f43d96c-ebde-4ae2-bbd5-4696fa7aab10
 
 ### Create movement [CREDIT]
 # @name createMovement
