@@ -74,7 +74,7 @@ export function errorHandler(
 
   // Business errors
   if (error instanceof DomainError) {
-    return reply.status(400).send({
+    return reply.status(error.statusCode || 400).send({
       error: error.name,
       message: error.message,
     });
