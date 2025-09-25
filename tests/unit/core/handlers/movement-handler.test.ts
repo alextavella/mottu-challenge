@@ -1,5 +1,5 @@
 import { MovementEvent, MovementEventType } from '@/core/events/movement-event';
-import { MovementCreatedHandler } from '@/core/handlers/movement-handler';
+import { MovementCreatedHandler } from '@/core/handlers/movement-created-handler';
 import { ICompleteMovementUseCase } from '@/core/usecases/movements/complete-movement-usecase';
 import { ServerError } from '@/domain/errors/server.error';
 import { MovementStatus, MovementType } from '@prisma/client';

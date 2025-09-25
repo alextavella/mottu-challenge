@@ -52,13 +52,13 @@ describe('MovementEvent', () => {
       expect(event.data).toBe(mockMovementData);
     });
 
-    it('should create a movement deleted event', () => {
+    it('should create a movement cancelled event', () => {
       const event = createMovementEvent(
-        MovementEventType.DELETED,
+        MovementEventType.CANCELLED,
         mockMovementData,
       );
 
-      expect(event.type).toBe(MovementEventType.DELETED);
+      expect(event.type).toBe(MovementEventType.CANCELLED);
       expect(event.data).toBe(mockMovementData);
     });
 
@@ -250,7 +250,7 @@ describe('MovementEvent', () => {
       expect(MovementEventType.ALL).toBe('movement.*');
       expect(MovementEventType.CREATED).toBe('movement.created');
       expect(MovementEventType.UPDATED).toBe('movement.updated');
-      expect(MovementEventType.DELETED).toBe('movement.deleted');
+      expect(MovementEventType.CANCELLED).toBe('movement.cancelled');
     });
   });
 

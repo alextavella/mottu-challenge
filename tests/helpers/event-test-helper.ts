@@ -5,7 +5,7 @@
  * @returns Promise that resolves after processing
  */
 export async function waitForEventProcessing(
-  delay: number = 2000,
+  delay: number = 5000,
 ): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, delay));
 }

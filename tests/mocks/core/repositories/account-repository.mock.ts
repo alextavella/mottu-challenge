@@ -1,8 +1,5 @@
 import type { IAccountRepository } from '@/domain/contracts/repositories/account-repository';
 
-/**
- * Mock do IAccountRepository para uso em testes unitários
- */
 export const createAccountRepositoryMock = (): IAccountRepository => ({
   create: vi.fn(),
   findById: vi.fn(),
@@ -10,7 +7,4 @@ export const createAccountRepositoryMock = (): IAccountRepository => ({
   getBalance: vi.fn(),
 });
 
-/**
- * Mock pré-configurado do IAccountRepository com comportamentos padrão
- */
 export const mockAccountRepository = createAccountRepositoryMock();
