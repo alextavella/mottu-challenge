@@ -27,7 +27,7 @@ Sistema de registro de movimentações financeiras (Mini Ledger) desenvolvido co
 ```bash
 # Clone o repositório
 git clone <repository-url>
-cd desafio-backend-nestjs
+cd mottu-challenge
 
 # Se estiver usando nvm, use a versão LTS especificada
 nvm use
@@ -210,18 +210,6 @@ pnpm test:ui
 pnpm test:coverage
 ```
 
-### Estrutura de Testes
-
-```
-tests/
-├── setup.ts                 # Configuração global
-├── unit/                    # Testes unitários
-│   ├── domain/             # Camada de domínio
-│   ├── lib/                # Bibliotecas
-│   └── utils/              # Utilitários
-└── README.md               # Guia completo de testes
-```
-
 ### Status Atual
 
 - ✅ **Cobertura configurada** (HTML + JSON + Text)
@@ -256,53 +244,6 @@ O projeto inclui os seguintes serviços:
 - **PostgreSQL**: Verifica se o banco está pronto para conexões
 - **RabbitMQ**: Verifica conectividade das portas AMQP
 - **App**: Aguarda PostgreSQL e RabbitMQ estarem saudáveis antes de iniciar
-
-## 📁 Estrutura do Projeto
-
-### **🏗️ Clean Architecture:**
-
-- **Domain**: Regras de negócio puras (entities, contracts, errors)
-- **Core**: Casos de uso e implementações de repositórios
-- **HTTP**: Controllers e servidor web
-- **Infra**: Detalhes técnicos (DB, Events, Config)
-
-```
-src/
-├── domain/                  # 🎯 DOMÍNIO (regras de negócio)
-│   ├── entities/            # Entidades de domínio
-│   ├── contracts/           # Interfaces/contratos
-│   └── errors/              # Erros de domínio por contexto
-├── core/                    # 🔧 CORE (casos de uso e handlers)
-│   ├── events/              # Eventos de domínio
-│   ├── handlers/            # Handlers de eventos
-│   ├── repositories/        # Implementações de repositórios
-│   └── usecases/            # Casos de uso por feature
-├── http/                    # 🌐 HTTP (controllers e servidor)
-│   ├── controllers/         # Controllers por feature
-│   ├── errors/              # Erros HTTP
-│   ├── middlewares/         # Middlewares HTTP
-│   ├── plugins/             # Plugins do Fastify
-│   └── routes/              # Registro de rotas
-└── infra/                   # 🏗️ INFRAESTRUTURA (detalhes técnicos)
-    ├── config/              # Configurações
-    ├── container/           # Injeção de dependência
-    ├── database/            # Cliente do banco
-    └── events/              # Sistema de eventos
-
-tests/
-├── unit/                    # Testes unitários
-├── integration/             # Testes de integração
-├── helpers/                 # Utilitários de teste
-└── setup.ts                # Configuração global
-
-docs/
-├── ARCHITECTURE.md          # Arquitetura do sistema
-├── CHALLENGE.md             # Descrição do desafio
-├── DOCKER.md                # Setup Docker
-├── EVENT_MANAGER.md         # Sistema de eventos
-├── STRESS_TEST.md           # Testes de race condition
-└── TESTS.md                 # Guia de testes
-```
 
 ## 🧪 Desenvolvimento
 
