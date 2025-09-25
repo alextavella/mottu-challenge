@@ -10,6 +10,9 @@ interface ConsumerRegistration {
   handler: IEventHandler<any>;
   options: Required<ConsumerOptions>;
   consumerTag?: string;
+  retryConsumerTag?: string;
+  dlqConsumerTag?: string;
+  dlqHandler?: IEventHandler<any>;
 }
 
 export class RabbitMQEventConsumer {
@@ -35,8 +38,7 @@ export class RabbitMQEventConsumer {
       prefetch: options.prefetch || 10,
       retryAttempts: options.retryAttempts || 3,
       retryDelay: options.retryDelay || 1000,
-      deadLetterExchange:
-        options.deadLetterExchange || `${this.exchangeName}.dlx`,
+      deadLetterExchange: options.deadLetterExchange || this.exchangeName,
     };
 
     this.consumers.set(eventType, {
@@ -52,6 +54,19 @@ export class RabbitMQEventConsumer {
     this.logger.info(`Subscribed to event type: ${eventType}`);
   }
 
+  async setDLQHandler<T extends BaseEvent>(
+    eventType: string,
+    dlqHandler: IEventHandler<T>,
+  ): Promise<void> {
+    const consumer = this.consumers.get(eventType);
+    if (consumer) {
+      consumer.dlqHandler = dlqHandler;
+      this.logger.info(`DLQ handler set for event type: ${eventType}`);
+    } else {
+      throw new Error(`Consumer for event type ${eventType} not found`);
+    }
+  }
+
   async start(): Promise<void> {
     if (this.isStarted) return;
 
@@ -62,11 +77,6 @@ export class RabbitMQEventConsumer {
 
     // Declare main exchange
     await this.channel.assertExchange(this.exchangeName, 'topic', {
-      durable: true,
-    });
-
-    // Declare dead letter exchange
-    await this.channel.assertExchange(`${this.exchangeName}.dlx`, 'topic', {
       durable: true,
     });
 
@@ -89,54 +99,99 @@ export class RabbitMQEventConsumer {
 
     const { handler, options } = consumer;
 
-    // Declare dead letter queue
-    const dlqName = `${options.queue}.dlq`;
-    await this.channel.assertQueue(dlqName, {
-      durable: true,
-    });
+    const queueMain = options.queue;
+    const queueRetry = `${queueMain}.retry`;
+    const queueDLQ = `${queueMain}.dlq`;
 
-    // Bind dead letter queue to dead letter exchange
-    await this.channel.bindQueue(
-      dlqName,
-      options.deadLetterExchange,
-      eventType,
-    );
-
-    // Declare main queue with dead letter configuration
-    await this.channel.assertQueue(options.queue, {
+    // Fila principal -> retry em caso de falha
+    await this.channel.assertQueue(queueMain, {
       durable: true,
       arguments: {
-        'x-dead-letter-exchange': options.deadLetterExchange,
-        'x-dead-letter-routing-key': eventType,
-        'x-message-ttl': 30000, // 30 seconds TTL for retry
+        'x-dead-letter-exchange': options.exchange,
+        'x-dead-letter-routing-key': queueRetry,
       },
     });
 
-    // Bind queue to exchange
+    // Fila de retry -> main após delay
+    await this.channel.assertQueue(queueRetry, {
+      durable: true,
+      arguments: {
+        'x-dead-letter-exchange': options.exchange,
+        'x-dead-letter-routing-key': queueMain,
+        'x-message-ttl': options.retryDelay,
+      },
+    });
+
+    // Fila DLQ -> destino final
+    await this.channel.assertQueue(queueDLQ, {
+      durable: true,
+    });
+
+    // Garantir que a exchange existe antes de fazer bind
+    await this.channel.assertExchange(options.exchange, 'topic', {
+      durable: true,
+    });
+    this.logger.info(`[DEBUG] Exchange ${options.exchange} created/verified`);
+
+    // Bind filas ao exchange
     await this.channel.bindQueue(
-      options.queue,
+      queueMain,
       options.exchange,
       options.routingKey,
     );
+    this.logger.info(
+      `[DEBUG] Bound queue ${queueMain} to exchange ${options.exchange} with routing key ${options.routingKey}`,
+    );
 
-    // Set prefetch for this consumer
+    // Bind fila de retry ao exchange
+    await this.channel.bindQueue(queueRetry, options.exchange, queueRetry);
+    this.logger.info(
+      `[DEBUG] Bound retry queue ${queueRetry} to exchange ${options.exchange} with routing key ${queueRetry}`,
+    );
+
+    // Bind fila DLQ ao exchange
+    await this.channel.bindQueue(queueDLQ, options.exchange, queueDLQ);
+    this.logger.info(
+      `[DEBUG] Bound DLQ ${queueDLQ} to exchange ${options.exchange} with routing key ${queueDLQ}`,
+    );
+
     await this.channel.prefetch(options.prefetch);
 
-    // Start consuming
+    // Consumer fila principal
     const { consumerTag } = await this.channel.consume(
-      options.queue,
+      queueMain,
       async (msg) => {
         if (!msg) return;
         await this.handleMessage(msg, handler, options);
       },
-      {
-        noAck: false, // Manual acknowledgment
+      { noAck: false },
+    );
+
+    // Consumer fila de retry
+    const { consumerTag: retryConsumerTag } = await this.channel.consume(
+      queueRetry,
+      async (msg) => {
+        if (!msg) return;
+        await this.handleRetryMessage(msg, options);
       },
+      { noAck: false },
+    );
+
+    // Consumer fila DLQ (para cancel handler)
+    const { consumerTag: dlqConsumerTag } = await this.channel.consume(
+      queueDLQ,
+      async (msg) => {
+        if (!msg) return;
+        await this.handleDLQMessage(msg, consumer);
+      },
+      { noAck: false },
     );
 
     consumer.consumerTag = consumerTag;
+    consumer.retryConsumerTag = retryConsumerTag;
+    consumer.dlqConsumerTag = dlqConsumerTag;
     this.logger.info(
-      `Started consumer for ${eventType} on queue ${options.queue}`,
+      `Started consumer for ${eventType} on queue ${queueMain}, retry queue ${queueRetry} and DLQ ${queueDLQ}`,
     );
   }
 
@@ -150,20 +205,16 @@ export class RabbitMQEventConsumer {
     let event: T;
 
     try {
-      // Parse the event from message content
-      const content = msg.content.toString();
-      const parsedEvent = JSON.parse(content);
-
-      // Convert timestamp back to Date object
-      event = {
-        ...parsedEvent,
-        timestamp: new Date(parsedEvent.timestamp),
-      } as T;
-
-      this.logger.info(`Processing event: ${event.type} with ID ${event.id}`);
+      event = this.parseEvent<T>(msg);
+      this.logger.info(
+        `[DEBUG] Processando evento: ${event.type} (${event.id}) - Queue: ${options.queue}`,
+      );
+      this.logger.info(
+        `[DEBUG] Event data: ${JSON.stringify((event as any).data, null, 2)}`,
+      );
     } catch (error) {
-      this.logger.error('Failed to parse event message:', error);
-      this.channel.nack(msg, false, false); // Reject and don't requeue
+      this.logger.error('Erro ao parsear evento:', error);
+      this.channel.nack(msg, false, false);
       return;
     }
 
@@ -172,41 +223,177 @@ export class RabbitMQEventConsumer {
     try {
       await handler.handle(event);
       this.channel.ack(msg);
-      this.logger.info(
-        `Successfully processed event: ${event.type} with ID ${event.id}`,
-      );
+      this.logger.info(`Evento processado: ${event.id}`);
     } catch (error) {
-      this.logger.error(`Failed to process event ${event.id}:`, error);
+      this.logger.error(`Erro ao processar evento ${event.id}:`, error);
 
       if (retryCount < options.retryAttempts) {
-        // Retry with delay
+        const nextRetryCount = retryCount + 1;
         this.logger.info(
-          `Retrying event ${event.id} (attempt ${retryCount + 1}/${options.retryAttempts})`,
+          `Enviando para retry: ${event.id} (${nextRetryCount}/${options.retryAttempts})`,
         );
 
-        setTimeout(
-          () => {
-            if (this.channel) {
-              this.channel.nack(msg, false, true); // Requeue for retry
-            }
-          },
-          options.retryDelay * Math.pow(2, retryCount),
-        ); // Exponential backoff
+        await this.sendToRetryQueue(event, options, nextRetryCount);
+        this.channel.ack(msg);
       } else {
-        // Max retries reached, send to dead letter queue
         this.logger.error(
-          `Max retries reached for event ${event.id}, sending to DLQ`,
+          `Max retries atingido para ${event.id}, enviando para DLQ`,
         );
-        this.channel.nack(msg, false, false); // Don't requeue, will go to DLQ
+        await this.sendToDLQ(event, options, retryCount);
+        this.channel.ack(msg);
       }
     }
   }
 
-  private getRetryCount(msg: ConsumeMessage): number {
-    const xDeathHeader = msg.properties.headers?.['x-death'];
-    if (Array.isArray(xDeathHeader) && xDeathHeader.length > 0) {
-      return xDeathHeader[0].count || 0;
+  private async handleRetryMessage(
+    msg: ConsumeMessage,
+    options: Required<ConsumerOptions>,
+  ): Promise<void> {
+    if (!this.channel) return;
+
+    try {
+      const event = this.parseEvent(msg);
+      const retryCount = this.getRetryCount(msg);
+      const routingKey =
+        msg.properties.headers?.['x-original-routing-key'] ||
+        options.routingKey;
+
+      this.logger.info(`Retry event ${event.id} (attempt ${retryCount})`);
+
+      // Re-enviar para fila principal
+      this.channel.publish(
+        options.exchange,
+        routingKey,
+        Buffer.from(JSON.stringify(event)),
+        {
+          persistent: true,
+          headers: {
+            'x-retry-count': retryCount,
+            'x-original-routing-key': routingKey,
+          },
+        },
+      );
+
+      this.channel.ack(msg);
+    } catch (error) {
+      this.logger.error('Erro ao processar retry:', error);
+      this.channel.nack(msg, false, false);
     }
+  }
+
+  private async handleDLQMessage(
+    msg: ConsumeMessage,
+    consumer: ConsumerRegistration,
+  ): Promise<void> {
+    if (!this.channel) return;
+
+    try {
+      const event = this.parseEvent(msg);
+      this.logger.info(
+        `[DEBUG] DLQ message received: ${event.type} (${event.id})`,
+      );
+      this.logger.info(
+        `[DEBUG] DLQ Event data: ${JSON.stringify((event as any).data, null, 2)}`,
+      );
+
+      // Se há um DLQ handler configurado, use-o para processar a mensagem
+      if (consumer.dlqHandler) {
+        this.logger.info(
+          `Processing DLQ message with cancel handler: ${event.id}`,
+        );
+        await consumer.dlqHandler.handle(event);
+        this.logger.info(`Movement ${event.id} cancelled successfully via DLQ`);
+      } else {
+        // Fallback: apenas log da mensagem na DLQ
+        this.logger.error(
+          `Message ${event.id} sent to DLQ after max retries. No DLQ handler configured.`,
+        );
+      }
+
+      this.channel.ack(msg);
+    } catch (error) {
+      this.logger.error('Erro ao processar mensagem DLQ:', error);
+      this.channel.nack(msg, false, false);
+    }
+  }
+
+  private parseEvent<T extends BaseEvent>(msg: ConsumeMessage): T {
+    const content = msg.content.toString();
+    const parsedEvent = JSON.parse(content);
+    return {
+      ...parsedEvent,
+      timestamp: new Date(parsedEvent.timestamp),
+    } as T;
+  }
+
+  private async sendToRetryQueue<T extends BaseEvent>(
+    event: T,
+    options: Required<ConsumerOptions>,
+    retryCount: number,
+  ): Promise<void> {
+    if (!this.channel) return;
+
+    const queueRetry = `${options.queue}.retry`;
+
+    // Publish to retry queue with custom headers
+    this.channel.publish(
+      options.exchange,
+      queueRetry,
+      Buffer.from(JSON.stringify(event)),
+      {
+        persistent: true,
+        headers: {
+          'x-retry-count': retryCount,
+          'x-original-routing-key': options.routingKey,
+        },
+      },
+    );
+
+    this.logger.info(`Evento ${event.id} enviado para retry (${retryCount})`);
+  }
+
+  private async sendToDLQ<T extends BaseEvent>(
+    event: T,
+    options: Required<ConsumerOptions>,
+    retryCount: number,
+  ): Promise<void> {
+    if (!this.channel) return;
+
+    const queueDLQ = `${options.queue}.dlq`;
+
+    this.channel.publish(
+      options.exchange,
+      queueDLQ,
+      Buffer.from(JSON.stringify(event)),
+      {
+        persistent: true,
+        headers: {
+          'x-original-routing-key': options.routingKey,
+          'x-failed-at': new Date().toISOString(),
+          'x-final-retry-count': retryCount,
+        },
+      },
+    );
+
+    this.logger.info(
+      `Evento ${event.id} enviado para DLQ após ${retryCount} retries`,
+    );
+  }
+
+  private getRetryCount(msg: ConsumeMessage): number {
+    const headers = msg.properties.headers || {};
+
+    // Usar header customizado se disponível
+    if (typeof headers['x-retry-count'] === 'number') {
+      return headers['x-retry-count'];
+    }
+
+    // Contar retries do x-death header
+    const xDeath = headers['x-death'];
+    if (Array.isArray(xDeath)) {
+      return xDeath.reduce((total, death) => total + (death.count || 0), 0);
+    }
+
     return 0;
   }
 
@@ -215,15 +402,46 @@ export class RabbitMQEventConsumer {
 
     // Cancel all consumers
     for (const [, consumer] of this.consumers) {
-      if (consumer.consumerTag && this.channel) {
-        try {
-          await this.channel.cancel(consumer.consumerTag);
-          this.logger.info(`Stopped consumer for ${consumer.eventType}`);
-        } catch (error) {
-          this.logger.error(
-            `Error stopping consumer for ${consumer.eventType}:`,
-            error,
-          );
+      if (this.channel) {
+        // Cancel main consumer
+        if (consumer.consumerTag) {
+          try {
+            await this.channel.cancel(consumer.consumerTag);
+            this.logger.info(`Stopped main consumer for ${consumer.eventType}`);
+          } catch (error) {
+            this.logger.error(
+              `Error stopping main consumer for ${consumer.eventType}:`,
+              error,
+            );
+          }
+        }
+
+        // Cancel retry consumer
+        if (consumer.retryConsumerTag) {
+          try {
+            await this.channel.cancel(consumer.retryConsumerTag);
+            this.logger.info(
+              `Stopped retry consumer for ${consumer.eventType}`,
+            );
+          } catch (error) {
+            this.logger.error(
+              `Error stopping retry consumer for ${consumer.eventType}:`,
+              error,
+            );
+          }
+        }
+
+        // Cancel DLQ consumer
+        if (consumer.dlqConsumerTag) {
+          try {
+            await this.channel.cancel(consumer.dlqConsumerTag);
+            this.logger.info(`Stopped DLQ consumer for ${consumer.eventType}`);
+          } catch (error) {
+            this.logger.error(
+              `Error stopping DLQ consumer for ${consumer.eventType}:`,
+              error,
+            );
+          }
         }
       }
     }

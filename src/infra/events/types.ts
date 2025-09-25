@@ -16,6 +16,10 @@ export interface IEventManager {
     handler: IEventHandler<T>,
     options?: ConsumerOptions,
   ): Promise<void>;
+  setDLQHandler<T extends BaseEvent>(
+    eventType: EventType,
+    dlqHandler: IEventHandler<T>,
+  ): Promise<void>;
   startConsumer(): Promise<void>;
   stopConsumer(): Promise<void>;
   isConnected(): boolean;
